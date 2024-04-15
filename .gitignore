@@ -132,7 +132,7 @@ dmypy.json
 *.DS_Store
 
 # Custom
-keys.cfg
+keys.cfg*
 
 # iPython Notebooks
 *.ipynb
@@ -187,5 +187,6 @@ website/frontend/build
 
 # trajectory files
 trajectories/*
+trajectories*/*
 
 .vscode/**

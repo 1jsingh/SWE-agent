@@ -100,6 +100,12 @@ class BaseModel:
             self.model_metadata = self.MODELS[self.api_model]
         elif args.model_name.startswith("azure:"):
             azure_model = args.model_name.split("azure:", 1)[1]
+            self.api_model = azure_model
+            # logger.info("#############################################")
+            # logger.info(azure_model, self.SHORTCUTS, MODELS)
+            # logger.info("#############################################")
+            if azure_model in self.SHORTCUTS:
+                azure_model = self.SHORTCUTS[azure_model]
             self.model_metadata = MODELS[azure_model]
         else:
             raise ValueError(f"Unregistered model ({args.model_name}). Add model name to MODELS metadata to {self.__class__}")
@@ -214,6 +220,8 @@ class OpenAIModel(BaseModel):
         "gpt3": "gpt-3.5-turbo-1106",
         "gpt3-legacy": "gpt-3.5-turbo-16k-0613",
         "gpt4": "gpt-4-1106-preview",
+        "gpt-4": "gpt-4-1106-preview",
+        "gpt-4-turbo": "gpt-4-1106-preview",
         "gpt4-legacy": "gpt-4-0613",
         "gpt4-0125": "gpt-4-0125-preview",
         "gpt3-0125": "gpt-3.5-turbo-0125",
@@ -225,7 +233,8 @@ class OpenAIModel(BaseModel):
         # Set OpenAI key
         cfg = config.Config(os.path.join(os.getcwd(), "keys.cfg"))
         if self.args.model_name.startswith("azure"):
-            self.api_model = cfg["AZURE_OPENAI_DEPLOYMENT"]
+            logger.info("Using Azure OpenAI API ... model: %s", self.api_model)
+            # self.api_model = self.cfg["AZURE_OPENAI_DEPLOYMENT"]
             self.client = AzureOpenAI(api_key=cfg["AZURE_OPENAI_API_KEY"], azure_endpoint=cfg["AZURE_OPENAI_ENDPOINT"], api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-02-01"))
         else:
             api_base_url: Optional[str] = cfg.get("OPENAI_API_BASE_URL", None)
