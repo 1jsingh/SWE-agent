@@ -76,6 +76,7 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
         """Generate a unique name for this run based on the arguments."""
         model_name = self.agent.model.model_name.replace(":", "-")
         data_stem = get_data_path_name(self.environment.data_path)
+        data_split = self.environment.split if self.environment.split else "null"
         config_stem = Path(self.agent.config_file).stem
 
         temp = self.agent.model.temperature
@@ -85,7 +86,7 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
         install_env = self.environment.install_environment
 
         return (
-            f"{model_name}__{data_stem}__{config_stem}__t-{temp:.2f}__p-{top_p:.2f}"
+            f"{model_name}__{data_stem}__{data_split}__{config_stem}__t-{temp:.2f}__p-{top_p:.2f}"
             + f"__c-{per_instance_cost_limit:.2f}__install-{int(install_env)}"
             + (f"__{self.suffix}" if self.suffix else "")
         )

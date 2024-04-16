@@ -135,7 +135,7 @@ dmypy.json
 keys.cfg*
 
 # iPython Notebooks
-*.ipynb
+# *.ipynb
 
 # Evaluation folders
 results/

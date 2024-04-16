@@ -18,9 +18,9 @@ model_name="azure:gpt4"
 ####################################################################################################
 per_instance_cost_limit="2.00"
 config_file="./config/default.yaml"
-suffix="run_dev_3"
-split="dev"
-# split="test"
+suffix="run_2"
+# split="dev"
+split="test"
 
 # Check if the user wants to use Docker or not
 use_docker=true
@@ -30,7 +30,8 @@ use_docker=true
 ####################################################################################################
 if [ "$use_docker" = true ]; then
     docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock \
-        -v /home/jas/project/qstar/SWE-agent/keys.cfg:/app/keys.cfg \
+        -v "$(pwd)/keys.cfg:/app/keys.cfg" \
+        -v "$(pwd)/trajectories:/app/trajectories" \
         sweagent/swe-agent-run:latest \
         python run.py --image_name=sweagent/swe-agent:latest \
             --model_name "$model_name" \

@@ -109,7 +109,7 @@ class SWEEnv(gym.Env):
         self.data_path = self.args.data_path
         self.data = get_instances(self.data_path, self.args.base_commit, self.args.split, token=self._github_token)
         self.logger.info(f"💽 Loaded dataset from {self.data_path}")
-
+        
         # Establish connection with execution container
         self.image_name = args.image_name
         self._reset_container()

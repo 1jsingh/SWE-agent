@@ -25,12 +25,73 @@ if [ ! -d "$testbed_dir" ]; then
     echo "Created testbed directory at $testbed_dir"
 fi
 
-# Run the Python script with the specified arguments
-python evaluation.py \
-    --predictions_path "$predictions_path" \
-    --swe_bench_tasks "$dataset_name_or_path" \
-    --log_dir "$results_dir" \
-    --testbed "$testbed_dir" \
-    --skip_existing \
-    --timeout 900 \
-    --verbose
+# # Check if the user wants to use Docker or not
+# use_docker=true
+
+# ####################################################################################################
+# # run the SWE benchmark
+# ####################################################################################################
+# if [ "$use_docker" = true ]; then
+#     docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock \
+#         -v "$(pwd)/keys.cfg:/app/keys.cfg" \
+#         -v "$(pwd)/trajectories:/app/trajectories" \
+#         sweagent/swe-agent-run:latest \
+#         python run.py --image_name=sweagent/swe-agent:latest \
+#             --model_name "$model_name" \
+#             --per_instance_cost_limit "$per_instance_cost_limit" \
+#             --config_file "$config_file" \
+#             --suffix "$suffix" \
+#             --split "$split"
+# else
+#     python run.py --model_name "$model_name" --per_instance_cost_limit "$per_instance_cost_limit" --config_file "$config_file" --suffix "$suffix" --split "$split"
+# fi
+
+# Check if the user wants to use Docker or not
+use_docker=false
+
+####################################################################################################
+# evaluation on the SWE benchmark
+####################################################################################################
+
+if [ "$use_docker" = true ]; then
+    docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock \
+        -v "$(pwd)/keys.cfg:/app/keys.cfg" \
+        -v "$(pwd)/../trajectories:/trajectories" \
+        -v "$(pwd)/results:/results" \
+        sweagent/swe-eval:latest \
+        python /evaluation.py \
+            --predictions_path "$predictions_path" \
+            --swe_bench_tasks "$dataset_name_or_path" \
+            --log_dir "$results_dir" \
+            --testbed "$testbed_dir" \
+            --skip_existing \
+            --timeout 900 \
+            --verbose
+else
+    python /evaluation.py \
+        --predictions_path "$predictions_path" \
+        --swe_bench_tasks "$dataset_name_or_path" \
+        --log_dir "$results_dir" \
+        --testbed "$testbed_dir" \
+        --skip_existing \
+        --timeout 900 \
+        --verbose
+fi
+
+# # Run the Python script with the specified arguments
+# python evaluation.py \
+#     --predictions_path "$predictions_path" \
+#     --swe_bench_tasks "$dataset_name_or_path" \
+#     --log_dir "$results_dir" \
+#     --testbed "$testbed_dir" \
+#     --skip_existing \
+#     --timeout 900 \
+#     --verbose
+
+# docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock \
+#     -v "$(pwd)/keys.cfg:/app/keys.cfg" \
+#     -v "$(pwd)/../trajectories:/trajectories" \
+#     -v "$(pwd)/results:/results" \
+#     -v "$(pwd):/evaluation" \
+#     sweagent/swe-eval:latest \
+#     bash
