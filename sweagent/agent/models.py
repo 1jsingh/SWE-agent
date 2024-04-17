@@ -16,7 +16,7 @@ from tenacity import (
     wait_random_exponential,
     retry_if_not_exception_type,
 )
-from typing import Optional
+from typing import Optional, Union
 
 logger = logging.getLogger("api_models")
 
@@ -49,7 +49,6 @@ class APIStats(Serializable):
             field.name: getattr(self, field.name) + getattr(other, field.name)
             for field in fields(self)
         })
-    
     def replace(self, other):
         if not isinstance(other, APIStats):
             raise TypeError("Can only replace APIStats with APIStats")
@@ -154,19 +153,13 @@ class BaseModel:
         )
 
         # Check whether total cost or instance cost limits have been exceeded
-        if (
-            self.args.total_cost_limit > 0
-            and self.stats.total_cost >= self.args.total_cost_limit
-        ):
+        if 0 < self.args.total_cost_limit <= self.stats.total_cost:
             logger.warning(
                 f"Cost {self.stats.total_cost:.2f} exceeds limit {self.args.total_cost_limit:.2f}"
             )
             raise CostLimitExceededError("Total cost limit exceeded")
 
-        if (
-            self.args.per_instance_cost_limit > 0
-            and self.stats.instance_cost >= self.args.per_instance_cost_limit
-        ):
+        if 0 < self.args.per_instance_cost_limit <= self.stats.instance_cost:
             logger.warning(
                 f"Cost {self.stats.instance_cost:.2f} exceeds limit {self.args.per_instance_cost_limit:.2f}"
             )
@@ -242,7 +235,7 @@ class OpenAIModel(BaseModel):
 
     def history_to_messages(
         self, history: list[dict[str, str]], is_demonstration: bool = False
-    ) -> list[dict[str, str]]:
+    ) -> Union[str, list[dict[str, str]]]:
         """
         Create `messages` by filtering out all keys except for role/content per `history` turn
         """
@@ -281,6 +274,7 @@ class OpenAIModel(BaseModel):
         output_tokens = response.usage.completion_tokens
         self.update_stats(input_tokens, output_tokens)
         return response.choices[0].message.content
+
 
 class AnthropicModel(BaseModel):
     MODELS = {
@@ -335,7 +329,7 @@ class AnthropicModel(BaseModel):
 
     def history_to_messages(
         self, history: list[dict[str, str]], is_demonstration: bool = False
-    ) -> list[dict[str, str]]:
+    ) -> Union[str, list[dict[str, str]]]:
         """
         Create `prompt` by filtering out all keys except for role/content per `history` turn
         Reference: https://docs.anthropic.com/claude/reference/complete_post
@@ -449,7 +443,7 @@ class OllamaModel(BaseModel):
 
     def history_to_messages(
         self, history: list[dict[str, str]], is_demonstration: bool = False
-    ) -> list[dict[str, str]]:
+    ) -> Union[str, list[dict[str, str]]]:
         """
         Create `messages` by filtering out all keys except for role/content per `history` turn
         """
@@ -525,7 +519,7 @@ class TogetherModel(BaseModel):
             "max_context": 32768,
             "cost_per_input_token": 6e-07,
             "cost_per_output_token": 6e-07,
-        },           
+        },
     }
 
     SHORTCUTS = {
@@ -602,7 +596,7 @@ class HumanModel(BaseModel):
 
     def history_to_messages(
         self, history: list[dict[str, str]], is_demonstration: bool = False
-    ) -> list[dict[str, str]]:
+    ) -> Union[str, list[dict[str, str]]]:
         """
         Create `messages` by filtering out all keys except for role/content per `history` turn
         """
@@ -661,7 +655,7 @@ class HumanThoughtModel(HumanModel):
                 break
             thought_all += thought
             thought = input("... ")
-        
+
         action = super().query(history, action_prompt="Action: ")
 
         return f"{thought_all}\n```\n{action}\n```"
