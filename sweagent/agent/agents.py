@@ -233,10 +233,12 @@ class Agent:
         system_msg = self.config.system_template.format(**self.system_args)
         logger.info(f"SYSTEM ({self.name})\n{system_msg}")
 
+        # initialize history with system message
         self.history: List[Dict[str, Any]] = [
             {"role": "system", "content": system_msg, "agent": self.name},
         ]
 
+        # add demonstrations to agent message history
         if len(self.config.demonstrations) > 0 and "history_to_messages" in dir(
             self.model
         ):
@@ -750,11 +752,20 @@ class Agent:
         # Run action/observation loop
         trajectory = []
         info = {}
+
+        index = 0 # TODO: REMOVE DEBUG
+
         while not done:
             state = env.communicate(self.state_command) if self.state_command else None
             thought, action, output = self.forward(
                 observation, env.get_available_actions(), state
             )
+            
+            # # TODO: REMOVE DEBUG
+            # index += 1
+            # if index > 2:
+            #     exit()
+            
             observations = list()
             run_action = self._guard_multiline_input(action)
             for sub_action in self.split_actions(run_action):

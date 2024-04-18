@@ -234,7 +234,7 @@ class OpenAIModel(BaseModel):
         cfg = config.Config(os.path.join(os.getcwd(), "keys.cfg"))
         if self.args.model_name.startswith("azure"):
             logger.info("Using Azure OpenAI API ... model: %s", self.api_model)
-            # self.api_model = self.cfg["AZURE_OPENAI_DEPLOYMENT"]
+            self.api_model = cfg["AZURE_OPENAI_DEPLOYMENT"]
             self.client = AzureOpenAI(api_key=cfg["AZURE_OPENAI_API_KEY"], azure_endpoint=cfg["AZURE_OPENAI_ENDPOINT"], api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-02-01"))
         else:
             api_base_url: Optional[str] = cfg.get("OPENAI_API_BASE_URL", None)
@@ -267,9 +267,15 @@ class OpenAIModel(BaseModel):
         Query the OpenAI API with the given `history` and return the response.
         """
         try:
+            messages = self.history_to_messages(history)
+
+            # logger.info("#############################################")
+            # logger.info(messages)
+            # logger.info("#############################################")
+
             # Perform OpenAI API call
             response = self.client.chat.completions.create(
-                messages=self.history_to_messages(history),
+                messages=messages,
                 model=self.api_model,
                 temperature=self.args.temperature,
                 top_p=self.args.top_p,

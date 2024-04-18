@@ -47,7 +47,7 @@ fi
 # fi
 
 # Check if the user wants to use Docker or not
-use_docker=true
+use_docker=false
 
 ####################################################################################################
 # evaluation on the SWE benchmark
@@ -58,7 +58,6 @@ if [ "$use_docker" = true ]; then
         -v "$(pwd)/keys.cfg:/app/keys.cfg" \
         -v "$(pwd)/../trajectories:/trajectories" \
         -v "$(pwd)/results:/results" \
-        -v "$(pwd)/testbed:/testbed" \
         sweagent/swe-eval:latest \
         python /evaluation.py \
             --predictions_path "$predictions_path" \
