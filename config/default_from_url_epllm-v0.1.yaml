@@ -14,10 +14,10 @@ system_template: |-
   Your shell prompt is formatted as follows:
   (Open file: <path>) <cwd> $
 
-  You need to format your output using two fields; discussion and command.
+  You need to format your output using two fields; discussion (must be in structed state form, see example below and demonstration for response format) and command.
   Your output should always include _one_ discussion and _one_ command field EXACTLY as in the following example:
-  DISCUSSION
-  First I'll start by using ls to see what files are in the current directory. Then maybe we can look at some relevant files to see what they look like.
+  DISCUSSION (MUST BE IN STRUCTURED STATE FORM):
+  "**Current State (S_k, k=0):**\n* The session has just started.\n* We are in the repository's root directory.\n* No files are currently open.\n\n**Final Goal State (S_T):**\n* Successfully diagnose and resolve the TimeDelta serialization precision issue.\n* All changes verified and submitted.\n\n**State-sequence from S_k to S_T:**\n* **S_0:** Initial state with the session started, no files open.\n* **S_1:** Create and open a new Python script `reproduce.py` to replicate the bug.\n* **S_2:** Insert the example code into `reproduce.py` to demonstrate the issue.\n* **S_3:** Run the script to confirm the bug reproduction.\n* **S_4:** Modify the script or related library code to resolve the bug.\n* **S_5:** Re-run the script to ensure the bug is fixed.\n* **S_6:** Submit the changes to the codebase after confirming the fix.\n"
   ```
   ls -a
   ```
