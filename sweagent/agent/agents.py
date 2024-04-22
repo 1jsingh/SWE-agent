@@ -225,7 +225,13 @@ class Agent:
 
 
     def setup(self, instance_args, init_model_stats=None) -> None:
-        """Setup the agent for a new instance."""
+        """Setup the agent for a new instance.
+        Does the following:
+            * Reset the model's stats
+            * Set the instance arguments
+            * Set model system message
+            * add demonstrations to agent message history
+        """
         assert self.config is not None  # mypy
         self.model.reset_stats(init_model_stats)
         self.instance_args = instance_args
@@ -746,7 +752,7 @@ class Agent:
             )
             self.init_environment_vars(env)
             self.last_container_id = env.container_obj.id
-        # Re-initialize primary
+        # Re-initialize primary (sets up history, model stats, etc. but mainly related to model not docker)
         self.setup(setup_args, init_model_stats)
 
         # Run action/observation loop

@@ -1,0 +1,22 @@
+python run.py --model_name azure:gpt4 \
+  --data_path https://github.com/pvlib/pvlib-python/issues/1603 \
+  --config_file config/default_from_url_epllm-v0.1.yaml \
+  --suffix dummy_state_react_run_1
+
+python run.py --model_name azure:gpt4 \
+--data_path https://github.com/pvlib/pvlib-python/issues/1603 \
+--config_file config/default_from_url.yaml \
+--suffix dummy_run_2
+
+
+python run.py --model_name azure:gpt4 \
+--config_file config/default_epllm-v0.1.yaml \
+--split "dev" \
+--num_tasks 1 \
+--suffix dummy_run_3
+
+python run.py --model_name azure:gpt4 \
+--config_file config/default_epllm-v0.1.yaml \
+--split "dev" \
+--num_tasks 1 \
+--suffix dummy_run_3

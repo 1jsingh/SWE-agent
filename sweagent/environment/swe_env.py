@@ -199,7 +199,7 @@ class SWEEnv(gym.Env):
                 error_msg="Failed to reset environment variables",
             )
 
-        # Set up environment
+        # Set up environment 
         self.communicate_with_handling(
             "source /root/miniconda3/etc/profile.d/conda.sh",
             error_msg="Failed to source conda",
@@ -654,10 +654,30 @@ class SWEEnv(gym.Env):
                     error_msg="Failed to create conda environment",
                     timeout_duration=LONG_TIMEOUT,
                 )
-            # Install extra pip packages if specified
+            # # Install extra pip packages if specified
+            # if "pip_packages" in install_configs:
+            #     self.communicate_with_handling(
+            #         f"source activate {env_name} && pip install {install_configs['pip_packages']}",
+            #         error_msg="Failed to install pip packages",
+            #         timeout_duration=LONG_TIMEOUT
+            #     )
+
+            # NOTE: Install extra pip packages if specified
             if "pip_packages" in install_configs:
+                pip_packages = install_configs['pip_packages']
+                # Check if pip_packages is a list and convert it to a space-separated string
+                if isinstance(pip_packages, list):
+                    pip_packages = ' '.join(pip_packages)
+                elif isinstance(pip_packages, str):
+                    # If it's a string, use it as-is
+                    pip_packages = pip_packages
+                else:
+                    # Handle unexpected data types
+                    raise ValueError("pip_packages must be a list or a string")
+
+                command = f"source activate {env_name} && pip install {pip_packages}"
                 self.communicate_with_handling(
-                    f"source activate {env_name} && pip install {install_configs['pip_packages']}",
+                    command,
                     error_msg="Failed to install pip packages",
                     timeout_duration=LONG_TIMEOUT
                 )

@@ -70,6 +70,8 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
     suffix: str = ""
     # Raise unhandled exceptions during the run (useful for debugging)
     raise_exceptions: bool = False
+    # Number of tasks to run (useful for debugging)
+    num_tasks: int = -1
 
     @property
     def run_name(self):
@@ -102,8 +104,11 @@ def main(args: ScriptArguments):
     traj_dir.mkdir(parents=True, exist_ok=True)
 
     save_arguments(traj_dir, args)
-
-    for index in range(len(env.data)):
+    # NOTE: num_tasks is the number of tasks to run, if -1, run all tasks
+    num_tasks = args.num_tasks if args.num_tasks > 0 else len(env.data)
+    start_index = 19 # TODO: remove this line
+    for index in range(num_tasks):
+        index += start_index # TODO: remove this line
         try:
             # Reset environment
             instance_id = env.data[index]["instance_id"]
@@ -112,6 +117,9 @@ def main(args: ScriptArguments):
                 continue
             logger.info("▶️  Beginning task " + str(index))
 
+            # NOTE: env.reset() will be mainly doing the cloning of the repo to the docker container
+            # as well as cleaning the repo, setting it to base commit (before the issue), option of applying test path for oracle setting
+            # and potentially install test env (though not clear if its the same as the base env or the agent has to install it himself)
             observation, info = env.reset(index)
             if info is None:
                 continue
@@ -315,19 +323,20 @@ def get_args(args=None) -> ScriptArguments:
     """
     defaults = ScriptArguments(
         suffix="",
+        num_tasks=-1,
         environment=EnvironmentArguments(
             image_name="sweagent/swe-agent:latest",
             data_path="princeton-nlp/SWE-bench_Lite",
             split="dev",
             verbose=True,
-            install_environment=True,
+            install_environment=True, # NOTE: the agent will be provided the default environment (see self.install_env in swe_env.py for more details)
         ),
         skip_existing=True,
         agent=AgentArguments(
             model=ModelArguments(
                 model_name="gpt4",
                 total_cost_limit=0.0,
-                per_instance_cost_limit=3.0,
+                per_instance_cost_limit=2.0,
                 temperature=0.0,
                 top_p=0.95,
             ),
