@@ -17,18 +17,31 @@ model_name="azure:gpt4"
 # experiment configurations
 ####################################################################################################
 per_instance_cost_limit="2.0"
+use_hepllm=false
+
+####################################################################################################
+# default configuration file
 # config_file="./config/default.yaml"
-config_file="./config/default_epllm-v0.1.yaml"
+
+####################################################################################################
+# State-react configuration file
+# config_file="./config/default_epllm-v0.1.yaml"
+
+####################################################################################################
+# hep-llm configuration file
+config_file="./config/default_hepllm_v0.1.yaml"
+use_hepllm=true
 
 # suffix="state-react__run_1"
-suffix="state-reactv2__testrun_7"
+# suffix="state-reactv2__testrun_7"
+suffix="hepllm__testrun_2"
+
 
 split="dev"
 # split="test"
 
 # Number of tasks to run the evaluation on (default is -1, which means all tasks)
 num_tasks=1
-
 # Check if the user wants to use Docker or not
 use_docker=false
 
@@ -47,5 +60,5 @@ if [ "$use_docker" = true ]; then
             --suffix "$suffix" \
             --split "$split"
 else
-    python run.py --model_name "$model_name" --per_instance_cost_limit "$per_instance_cost_limit" --config_file "$config_file" --suffix "$suffix" --split "$split" --num_tasks="$num_tasks"
+    python run.py --model_name "$model_name" --per_instance_cost_limit "$per_instance_cost_limit" --config_file "$config_file" --suffix "$suffix" --split "$split" --num_tasks="$num_tasks" --use_hepllm="$use_hepllm"
 fi

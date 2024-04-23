@@ -41,8 +41,13 @@ class Subroutine(FrozenSerializable):
 
 @dataclass(frozen=True)
 class AgentConfig(FrozenSerializable):
+    # default args
     system_template: str
     instance_template: str
+    # intial and final goal state config
+    initial_state_overall: Optional[str] = ""
+    final_goal_state_overall: Optional[str] = ""
+
     next_step_template: Optional[str] = None  # defaults to instance_template
     next_step_no_output_template: Optional[str] = None  # defaults to next_step_template
     strategy_template: Optional[str] = None
@@ -181,6 +186,8 @@ class AgentConfig(FrozenSerializable):
 class AgentArguments(FlattenedAccess, FrozenSerializable):
     """Configure the agent's behaviour (templates, parse functions, blocklists, ...)."""
     model: ModelArguments = None
+    use_hepllm: bool = False # NOTE: Added for HEPLLM
+    hepllm_levels: int = 1 # NOTE: Added for HEPLLM
 
     # Policy can only be set via config yaml file from command line
     config_file: Optional[Path] = None
@@ -222,6 +229,11 @@ class Agent:
         self._parse_command_patterns()
         self.history = []
         self.last_container_id = None
+        
+        # NOTE: Added for HEPLLM
+        self.hepllm_levels = args.hepllm_levels
+        self.use_hepllm = args.use_hepllm
+        self.args = args
 
 
     def setup(self, instance_args, init_model_stats=None) -> None:
@@ -728,6 +740,293 @@ class Agent:
         env.communicate(f"cd {cwd}")
         self.model.stats.replace(sub_agent.model.stats)
         return sub_agent_output
+    
+    def run_hepllm(self,
+        setup_args: Dict[str, Any],
+        env: SWEEnv,
+        observation: Optional[str] = None,
+        traj_dir: Optional[Path] = None,
+        return_type: Optional[str] = "info",
+        init_model_stats: Optional[APIStats] = None,
+    ):
+        """
+        Run the agent on an environment but using hepllms.
+        Return the final value of the specified return type.
+
+        TODO: implement the run_hepllm method
+        """
+        # setup env container
+        assert env.container_obj is not None
+        assert self.config is not None  # mypy
+
+        if env.container_obj.id != self.last_container_id:
+            logger.info(
+                f"Initializing agent settings for container {env.container_obj.id}"
+            )
+            self.init_environment_vars(env)
+            self.last_container_id = env.container_obj.id
+
+        # extract the initial and final state
+        initial_state, final_goal_state = self.get_initial_final_goal_state()
+
+        # add initial and final state to setup_args
+        setup_args["initial_state"] = initial_state
+        setup_args["final_goal_state"] = final_goal_state
+
+        # store all inputs as run_args
+        self.run_args = {
+            "setup_args": setup_args,
+            "env": env,
+            "observation": observation,
+            "traj_dir": traj_dir,
+            "return_type": return_type,
+            "init_model_stats": init_model_stats,
+        }
+
+        # run the hepllm agent
+        info, trajectory = self.hepllm_execute(initial_state, final_goal_state)
+        return info, trajectory
+
+    def get_initial_final_goal_state(self):
+        """
+        Get the initial and final state of the agent.
+
+        TODO: implement the get_initial_final_goal_state method
+        """
+        # read the initial and final goal state from the config
+        initial_state = self.config.initial_state_overall
+        final_goal_state = self.config.final_goal_state_overall
+        return initial_state, final_goal_state
+
+    def hepllm_execute(self, initial_state, final_goal_state):
+        """
+        Execute the hepllm agent.
+
+        TODO: implement the hepllm agent
+        """
+        # unpack run_args
+        setup_args = self.run_args["setup_args"]
+        env = self.run_args["env"]
+        observation = self.run_args["observation"]
+        traj_dir = self.run_args["traj_dir"]
+        return_type = self.run_args["return_type"]
+        init_model_stats = self.run_args["init_model_stats"]
+
+        info, trajectory = None, None
+
+        if self.hepllm_levels==1:
+            # run react at the last heirarchical level
+            info, trajectory = self.react_execute(initial_state, final_goal_state)
+        else:
+            # intermediate state
+            intermediate_state = self.config.intermediate_state
+
+            # initial two part division: reproduce issue and solve
+            agent1 = Agent("reproduce_agent", self.args, hepllm_levels=self.hepllm_levels-1)
+            info = agent1.sub_agent_execute(initial_state, intermediate_state, run_args)
+
+            # final two part division: reproduce issue and solve
+            agent2 = Agent("solve_agent", self.args, hepllm_levels=self.hepllm_levels-1)
+            info = agent2.sub_agent_execute(intermediate_state, final_goal_state)
+
+        return info, trajectory
+
+    def sub_agent_execute(self, initial_state, final_goal_state):
+        """
+        Execute the sub-agent.
+        """
+        pass
+        # assert self.config is not None  # mypy
+        # env_vars = self.get_environment_vars(env)
+        # cwd = env.communicate("pwd -P").strip()
+        # init_observation = self.config._subroutines[agent_name].init_observation
+        # if init_observation is not None:
+        #     obs, _, _, _ = env.step(init_observation.format(args=sub_action["args"]))
+        # else:
+        #     obs = None
+        # if env.returncode != 0:
+        #     self.history.append({"role": "user", "content": obs, "agent": agent_name})
+        #     raise RuntimeError(
+        #         f"Nonzero return code: {env.returncode} for init_observation in {agent_name}.\n{obs}"
+        #     )
+        # return_type = self.config._subroutines[agent_name].return_type
+        # sub_agent = Agent(agent_name, self.config._subroutines[agent_name].agent_args)
+        # sub_agent_output = sub_agent.run(
+        #     {"issue": sub_action["args"]},
+        #     env,
+        #     observation=obs,
+        #     return_type=return_type,
+        #     init_model_stats=self.model.stats,
+        # )
+        # self.history += sub_agent.history
+        # self.set_environment_vars(env, env_vars)
+        # env.communicate(f"cd {cwd}")
+        # self.model.stats.replace(sub_agent.model.stats)
+        # return sub_agent_output
+
+
+    def react_execute(self, initial_state, final_goal_state):
+        """
+        Execute the react agent from initial to final state.
+
+        TODO: implement the react agent
+        """
+        done = False
+
+        # unpack run_args
+        setup_args = self.run_args["setup_args"]
+        env = self.run_args["env"]
+        observation = self.run_args["observation"]
+        traj_dir = self.run_args["traj_dir"]
+        return_type = self.run_args["return_type"]
+        init_model_stats = self.run_args["init_model_stats"]
+
+        # Re-initialize primary (sets up history, model stats, etc. but mainly related to model not docker)
+        self.setup(setup_args, init_model_stats)
+
+        # Run action/observation loop
+        trajectory = []
+        info = {}
+
+        index = 0 # TODO: REMOVE DEBUG
+
+        while not done:
+            state = env.communicate(self.state_command) if self.state_command else None
+            thought, action, output = self.forward(
+                observation, env.get_available_actions(), state
+            )
+            
+            # # TODO: REMOVE DEBUG
+            # index += 1
+            # if index > 2:
+            #     exit()
+            
+            observations = list()
+            run_action = self._guard_multiline_input(action)
+            for sub_action in self.split_actions(run_action):
+                # TODO: remove debug
+                # logger.info("#############################################")
+                # logger.info(f"SUB_ACTION: {sub_action}")
+                # logger.info(f"RUN_ACTION: {self.split_actions(run_action)}")
+                # logger.info(f"ACTION: {action}")
+                # logger.info("#############################################")
+                if (
+                    sub_action["agent"] == self.name
+                    or sub_action["cmd_name"] == self.config.submit_command
+                ):   
+                    obs, _, done, info = env.step(sub_action["action"])
+                    observations.append(obs)
+                    if sub_action["cmd_name"] == self.config.submit_command:
+                        done = True
+                    if done:
+                        break
+                else:
+                    agent_name = sub_action["agent"]
+                    sub_agent_output = self.call_subroutine(agent_name, sub_action, env)
+                    observations.append(sub_agent_output)
+
+            observation = "\n".join([obs for obs in observations if obs is not None])
+
+            trajectory.append(
+                {
+                    "action": action,
+                    "observation": observation,
+                    "response": output,
+                    "state": state,
+                    "thought": thought,
+                }
+            )
+            info["model_stats"] = self.model.stats.to_dict()
+            if traj_dir:
+                self.save_trajectory(trajectory, traj_dir, env, info)
+        if return_type == "info":
+            return info
+        if return_type == "info_trajectory":
+            return info, trajectory
+        return trajectory[-1][return_type]
+
+
+    def run_heirarchial(
+        self,
+        setup_args: Dict[str, Any],
+        env: SWEEnv,
+        observation: Optional[str] = None,
+        traj_dir: Optional[Path] = None,
+        return_type: Optional[str] = "info",
+        init_model_stats: Optional[APIStats] = None,
+    ):
+        """
+        Run the agent on an environment.
+        Return the final value of the specified return type.
+        """
+        done = False
+        assert env.container_obj is not None
+        assert self.config is not None  # mypy
+
+        if env.container_obj.id != self.last_container_id:
+            logger.info(
+                f"Initializing agent settings for container {env.container_obj.id}"
+            )
+            self.init_environment_vars(env)
+            self.last_container_id = env.container_obj.id
+        # Re-initialize primary (sets up history, model stats, etc. but mainly related to model not docker)
+        self.setup(setup_args, init_model_stats)
+
+        # Run action/observation loop
+        trajectory = []
+        info = {}
+
+        index = 0 # TODO: REMOVE DEBUG
+
+        while not done:
+            state = env.communicate(self.state_command) if self.state_command else None
+            thought, action, output = self.forward(
+                observation, env.get_available_actions(), state
+            )
+            
+            # # TODO: REMOVE DEBUG
+            # index += 1
+            # if index > 2:
+            #     exit()
+            
+            observations = list()
+            run_action = self._guard_multiline_input(action)
+            for sub_action in self.split_actions(run_action):
+                if (
+                    sub_action["agent"] == self.name
+                    or sub_action["cmd_name"] == self.config.submit_command
+                ):
+                    obs, _, done, info = env.step(sub_action["action"])
+                    observations.append(obs)
+                    if sub_action["cmd_name"] == self.config.submit_command:
+                        done = True
+                    if done:
+                        break
+                else:
+                    agent_name = sub_action["agent"]
+                    sub_agent_output = self.call_subroutine(agent_name, sub_action, env)
+                    observations.append(sub_agent_output)
+
+            observation = "\n".join([obs for obs in observations if obs is not None])
+
+            trajectory.append(
+                {
+                    "action": action,
+                    "observation": observation,
+                    "response": output,
+                    "state": state,
+                    "thought": thought,
+                }
+            )
+            info["model_stats"] = self.model.stats.to_dict()
+            if traj_dir:
+                self.save_trajectory(trajectory, traj_dir, env, info)
+        if return_type == "info":
+            return info
+        if return_type == "info_trajectory":
+            return info, trajectory
+        return trajectory[-1][return_type]
+
 
     def run(
         self,

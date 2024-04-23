@@ -106,7 +106,7 @@ def main(args: ScriptArguments):
     save_arguments(traj_dir, args)
     # NOTE: num_tasks is the number of tasks to run, if -1, run all tasks
     num_tasks = args.num_tasks if args.num_tasks > 0 else len(env.data)
-    start_index = 19 # TODO: remove this line
+    start_index = 1 # TODO: remove this line
     for index in range(num_tasks):
         index += start_index # TODO: remove this line
         try:
@@ -148,13 +148,26 @@ def main(args: ScriptArguments):
                 "test_files": test_files,
                 "tests": tests
             }
-            info, trajectory = agent.run(
-                setup_args=setup_args,
-                env=env,
-                observation=observation,
-                traj_dir=traj_dir,
-                return_type="info_trajectory",
-            )
+            
+            if args.agent.use_hepllm:
+                info, trajectory = agent.run_hepllm(
+                    setup_args=setup_args,
+                    env=env,
+                    observation=observation,
+                    traj_dir=traj_dir,
+                    return_type="info_trajectory",
+                )
+            else:
+                # Run the agent (old version)
+                info, trajectory = agent.run(
+                    setup_args=setup_args,
+                    env=env,
+                    observation=observation,
+                    traj_dir=traj_dir,
+                    return_type="info_trajectory",
+                )
+
+                
             save_predictions(traj_dir, instance_id, info)
             save_patch(traj_dir, instance_id, info)
             if args.actions.open_pr and should_open_pr(args, info, token=env._github_token):
@@ -341,6 +354,8 @@ def get_args(args=None) -> ScriptArguments:
                 top_p=0.95,
             ),
             config_file="config/default.yaml",
+            use_hepllm=False,
+            hepllm_levels=1,
         ),
         actions=ActionsArguments(open_pr=False, skip_if_commits_reference_issue=True),
     )

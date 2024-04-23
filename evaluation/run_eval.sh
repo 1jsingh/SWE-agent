@@ -76,7 +76,7 @@ else
         --swe_bench_tasks "$dataset_name_or_path" \
         --log_dir "$results_dir" \
         --testbed "$testbed_dir" \
-        --skip_existing \
+        # --skip_existing \
         --timeout 900 \
         --verbose
 fi
