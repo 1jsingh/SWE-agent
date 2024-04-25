@@ -21,6 +21,7 @@ from sweagent.environment.utils import LOGGER_NAME
 from sweagent.environment.swe_env import SWEEnv
 from tenacity import RetryError
 from typing import Dict, List, Optional, Tuple, Any
+import copy
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -214,7 +215,7 @@ class AgentArguments(FlattenedAccess, FrozenSerializable):
 class Agent:
     """Agent handles the behaviour of the model and how it interacts with the environment."""
 
-    def __init__(self, name: str, args: AgentArguments):
+    def __init__(self, name: str, args: AgentArguments, is_sub_agent=False):
         self.name = name
         self.model = get_model(
             args.model, args.config._commands + args.config.subroutine_types
@@ -234,6 +235,7 @@ class Agent:
         self.hepllm_levels = args.hepllm_levels
         self.use_hepllm = args.use_hepllm
         self.args = args
+        self.is_sub_agent = is_sub_agent
 
 
     def setup(self, instance_args, init_model_stats=None) -> None:
@@ -249,7 +251,8 @@ class Agent:
         self.instance_args = instance_args
 
         system_msg = self.config.system_template.format(**self.system_args)
-        logger.info(f"SYSTEM ({self.name})\n{system_msg}")
+        if self.is_sub_agent:
+            logger.info(f"SYSTEM ({self.name})\n{system_msg}")
 
         # initialize history with system message
         self.history: List[Dict[str, Any]] = [
@@ -990,22 +993,31 @@ class Agent:
             #     exit()
             
             observations = list()
-            run_action = self._guard_multiline_input(action)
-            for sub_action in self.split_actions(run_action):
-                if (
-                    sub_action["agent"] == self.name
-                    or sub_action["cmd_name"] == self.config.submit_command
-                ):
-                    obs, _, done, info = env.step(sub_action["action"])
-                    observations.append(obs)
-                    if sub_action["cmd_name"] == self.config.submit_command:
-                        done = True
-                    if done:
-                        break
-                else:
-                    agent_name = sub_action["agent"]
-                    sub_agent_output = self.call_subroutine(agent_name, sub_action, env)
-                    observations.append(sub_agent_output)
+            if 'subtask_execute' in action:
+                assert self.hepllm_levels > 1, "Heirarchial levels must be greater than 1 for subtask delegation"
+                agent_name, subtask_instruction = self.parse_subtask_execute(action)
+                sub_agent_output = self.sub_agent_execute_stateless(agent_name, subtask_instruction, env, observation, setup_args)
+                observations.append(sub_agent_output)
+            elif 'finish_subtask_and_report_to_main_agent' in action:
+                subtask_report = self.parse_finish_subtask_and_report_to_main_agent(action)
+                return subtask_report
+            else:
+                run_action = self._guard_multiline_input(action)
+                for sub_action in self.split_actions(run_action):
+                    if (
+                        sub_action["agent"] == self.name
+                        or sub_action["cmd_name"] == self.config.submit_command
+                    ):
+                        obs, _, done, info = env.step(sub_action["action"])
+                        observations.append(obs)
+                        if sub_action["cmd_name"] == self.config.submit_command:
+                            done = True
+                        if done:
+                            break
+                    else:
+                        agent_name = sub_action["agent"]
+                        sub_agent_output = self.call_subroutine(agent_name, sub_action, env)
+                        observations.append(sub_agent_output)
 
             observation = "\n".join([obs for obs in observations if obs is not None])
 
@@ -1025,8 +1037,141 @@ class Agent:
             return info
         if return_type == "info_trajectory":
             return info, trajectory
+        if return_type == "subtask_report":
+            subtask_report = "SUBTASK REPORT: Finishing subtask and need to submit due to exit cost"
+            return subtask_report
         return trajectory[-1][return_type]
 
+    def sub_agent_execute_stateless(self, agent_name, subtask_instruction, env, previous_observation=None, setup_args=None):
+        """
+        Execute the sub-agent without maintaining state.
+
+        - creates the subagent args and config
+        - Instantiate the sub-agent, depending on the root level
+        - synchronize the env and current state
+        - run the sub-agent --> output is the sub-agent report
+        - put things back for env, args, etc for the main agent
+        - return the sub-agent report
+        """
+
+        # create the sub-agent args and config
+        subagent_hepllm_levels = self.hepllm_levels - 1
+        if subagent_hepllm_levels == 1:
+            subagent_config_file = "config/hepllm/default-v1-leaf-level.yaml"
+        else:
+            subagent_config_file = "config/hepllm/default-v1-root-level.yaml"     
+        agent_args = AgentArguments(
+            model=self.args.model,
+            config_file=subagent_config_file,
+            use_hepllm=self.use_hepllm,
+            hepllm_levels=subagent_hepllm_levels)
+        
+        # Instantiate the sub-agent, depending on the root level
+        logger.info("INFO: Instantiating sub-agent...")
+        sub_agent = Agent(agent_name, agent_args, is_sub_agent=True)
+
+        # create the setup args for the sub-agent
+        sub_setup_args = copy.deepcopy(setup_args)
+        sub_setup_args["subtask_instructions"] = subtask_instruction
+
+        # synchronize the env and current state
+        env_vars = self.get_environment_vars(env)
+        cwd = env.communicate("pwd -P").strip()
+        # init_observation = self.config._subroutines[agent_name].init_observation
+        init_observation = "prev" #None
+        if init_observation is not None:
+            obs = previous_observation
+            # obs, _, _, _ = env.step(init_observation.format(args=sub_action["args"]))
+        else:
+            obs = None
+
+        # run the sub-agent --> output is the sub-agent report
+        sub_agent_report = sub_agent.run_heirarchial(
+                                    sub_setup_args,
+                                    env,
+                                    observation=obs,
+                                    return_type="subtask_report",
+                                    init_model_stats=self.model.stats,
+                                )
+
+        self.set_environment_vars(env, env_vars)
+        env.communicate(f"cd {cwd}")
+        self.model.stats.replace(sub_agent.model.stats)
+        return sub_agent_report
+
+        # assert self.config is not None  # mypy
+        # env_vars = self.get_environment_vars(env)
+        # cwd = env.communicate("pwd -P").strip()
+        # init_observation = self.config._subroutines[agent_name].init_observation
+        # if init_observation is not None:
+        #     obs, _, _, _ = env.step(init_observation.format(args=sub_action["args"]))
+        # else:
+        #     obs = None
+        # if env.returncode != 0:
+        #     self.history.append({"role": "user", "content": obs, "agent": agent_name})
+        #     raise RuntimeError(
+        #         f"Nonzero return code: {env.returncode} for init_observation in {agent_name}.\n{obs}"
+        #     )
+        # return_type = self.config._subroutines[agent_name].return_type
+        # sub_agent = Agent(agent_name, self.config._subroutines[agent_name].agent_args)
+        # sub_agent_output = sub_agent.run(
+        #     {"issue": sub_action["args"]},
+        #     env,
+        #     observation=obs,
+        #     return_type=return_type,
+        #     init_model_stats=self.model.stats,
+        # )
+        # self.history += sub_agent.history
+        # self.set_environment_vars(env, env_vars)
+        # env.communicate(f"cd {cwd}")
+        # self.model.stats.replace(sub_agent.model.stats)
+        # return sub_agent_output
+
+    def parse_subtask_execute(self, action):
+        """
+        Parse the subtask execute action into the agent name and the subtask instruction.
+        
+        Args:
+            action (str): A string containing the subtask execute command block.
+
+        Returns:
+            tuple: A tuple containing the agent name and subtask instructions as strings.
+        """
+        # Split the input into lines
+        lines = action.strip().split('\n')
+        
+        # The first line should contain the subtask command and the agent name
+        first_line = lines[0].strip()
+        # Assuming the format 'subtask_execute <agent_name>'
+        _, agent_name = first_line.split(' ', 1)
+        
+        # The remaining part of the action block is the subtask instruction
+        # It starts from the next line till the line before 'end_subtask'
+        subtask_instruction = '\n'.join(line.strip() for line in lines[1:-1]).strip()
+        
+        return (agent_name, subtask_instruction)
+
+    def parse_finish_subtask_and_report_to_main_agent(self, action):
+        """
+        Parse the finish subtask and report to main agent action into a subtask completion report.
+        
+        Args:
+            action (str): A string containing the subtask completion report command block.
+
+        Returns:
+            str: A string containing the subtask completion report.
+        """
+        # Remove any leading or trailing whitespace and split into lines
+        lines = action.strip().split('\n')
+        
+        # Find the line index for the start and end of the subtask report
+        start_index = 1  # The report starts after the first line
+        end_index = len(lines) - 1  # The last line 'end_report' is not part of the report
+
+        # Join the relevant lines to form the complete subtask report
+        subtask_completion_report = '\n'.join(line.strip() for line in lines[start_index:end_index]).strip()
+        
+        return subtask_completion_report
 
     def run(
         self,

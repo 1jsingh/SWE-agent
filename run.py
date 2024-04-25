@@ -72,6 +72,7 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
     raise_exceptions: bool = False
     # Number of tasks to run (useful for debugging)
     num_tasks: int = -1
+    start_index: int = 0 # NOTE: used for debug
 
     @property
     def run_name(self):
@@ -106,9 +107,10 @@ def main(args: ScriptArguments):
     save_arguments(traj_dir, args)
     # NOTE: num_tasks is the number of tasks to run, if -1, run all tasks
     num_tasks = args.num_tasks if args.num_tasks > 0 else len(env.data)
-    start_index = 1 # TODO: remove this line
-    for index in range(num_tasks):
-        index += start_index # TODO: remove this line
+    num_tasks = min(num_tasks, len(env.data) - args.start_index)
+    assert num_tasks > 0, f"num_tasks={num_tasks} must be positive"
+    for index in range(args.start_index, args.start_index + num_tasks):
+        # index += args.start_index # TODO: remove this line
         try:
             # Reset environment
             instance_id = env.data[index]["instance_id"]
@@ -150,7 +152,14 @@ def main(args: ScriptArguments):
             }
             
             if args.agent.use_hepllm:
-                info, trajectory = agent.run_hepllm(
+                # info, trajectory = agent.run_hepllm(
+                #     setup_args=setup_args,
+                #     env=env,
+                #     observation=observation,
+                #     traj_dir=traj_dir,
+                #     return_type="info_trajectory",
+                # )
+                info, trajectory = agent.run_heirarchial(
                     setup_args=setup_args,
                     env=env,
                     observation=observation,
@@ -337,6 +346,7 @@ def get_args(args=None) -> ScriptArguments:
     defaults = ScriptArguments(
         suffix="",
         num_tasks=-1,
+        start_index=0, # NOTE: used for debug
         environment=EnvironmentArguments(
             image_name="sweagent/swe-agent:latest",
             data_path="princeton-nlp/SWE-bench_Lite",
