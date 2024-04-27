@@ -16,12 +16,21 @@ model_name="azure:gpt4"
 ####################################################################################################
 # experiment configurations
 ####################################################################################################
-per_instance_cost_limit="2.0"
+per_instance_cost_limit="10.0"
 use_hepllm=false
+skip_existing=false
+# Number of tasks to run the evaluation on (default is -1, which means all tasks)
+num_tasks=1
+start_index=0
+
+# data split
+split="dev"
+# split="test"
 
 ####################################################################################################
 # default configuration file
 # config_file="./config/default.yaml"
+# suffix="${split}_${start_index}_${num_tasks}_baseline__testrun_2"
 
 ####################################################################################################
 # State-react configuration file
@@ -29,24 +38,17 @@ use_hepllm=false
 
 ####################################################################################################
 # hep-llm configuration file
-config_file="./config/default_hepllm_v0.1.yaml"
+# config_file="./config/default_hepllm_v0.1.yaml"
 
-config_file="./config/hepllm/default-v1-root-level.yaml"
+config_file="./config/hepllm/default-v2-root-level.yaml"
 use_hepllm=true
+suffix="${split}_${start_index}_${num_tasks}_hepllm-stateless-level-2__testrun_7"
 
-# Number of tasks to run the evaluation on (default is -1, which means all tasks)
-num_tasks=1
-start_index=10
-
-# data split
-split="dev"
-# split="test"
 
 # experiment suffix
 # suffix="state-react__run_1"
 # suffix="state-reactv2__testrun_7"
-suffix="${split}_${start_index}_${num_tasks}_hepllm-stateless-level-2__testrun_1"
-
+# suffix="${split}_${start_index}_${num_tasks}_baseline__testrun_2"
 
 
 
@@ -77,5 +79,6 @@ else
         --num_tasks="$num_tasks" \
         --start_index="$start_index" \
         --use_hepllm="$use_hepllm" \
-        --hepllm_levels=2
+        --hepllm_levels=2 \
+        --skip_existing="$skip_existing"
 fi

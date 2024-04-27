@@ -41,14 +41,19 @@ instance_template: |-
   NOTE ABOUT THE EDIT COMMAND: Indentation really matters! When editing a file, make sure to insert appropriate indentation before each line! 
 
   IMPORTANT TIPS:
-  1. IMPORTANT: First step without fail must always be to check the files in the main repo. You can do this by running the `ls -a` action. This will show you all the files in the current directory and be useful for making future decisions.
-  2. Always start by trying to replicate the bug that the issues discusses. 
+  1a. IMPORTANT: First step without fail must always be to check the files in the main repo. You can do this by running the `ls -F` action. This will show you all the files in the current directory and be useful for making future decisions.
+  
+  1b. IMPORTANT: Second, try reading the README or documentation to understand the basic usage of the github repo or library.
+
+  2. Once done with above, always start by trying to replicate the bug that the issues discusses. 
      If the issue includes code for reproducing the bug, we recommend that you re-implement that in your environment, and run it to make sure you can reproduce the bug.
      Then start trying to fix it.
      When you think you've fixed the bug, re-run the bug reproduction script to make sure that the bug has indeed been fixed.
      
      If the bug reproduction script does not print anything when it succesfully runs, we recommend adding a print("Script completed successfully, no errors.") command at the end of the file,
      so that you can be sure that the script indeed ran fine all the way through. 
+
+  2b. Please use a single reproduction script to reproduce the bug, even when testing multiple cases or inputs. This will help you to keep track of the bug and the fix.
 
   3. If you run a command and it doesn't work, try running a different command. A command that did not work once will not work the second time unless you modify it!
 
@@ -60,11 +65,11 @@ instance_template: |-
 
   7. When editing files, it is easy to accidentally specify a wrong line number or to write code with incorrect indentation. Always check the code after you issue an edit to make sure that it reflects what you wanted to accomplish. If it didn't, issue another command to fix it.
     
-  8. MOST IMPORTANT: You can and should assign / delegate smaller subtasks (e.g. reproducing the issue) other agents using 'subtask_execute' action. This will allow you to spend most of your time on more complex tasks and also be able to plan better.
+  8. MOST IMPORTANT: You should assign / delegate smaller subtasks (e.g. reproducing the issue) other agents using 'subtask_execute' action. This will allow you to spend most of your time on more complex tasks and also be able to plan better.
 
-  9. We recommend you work in high-level action space, and use subagents for low-entropy subtasks.
+  9. You should work in high-level action space (leveraging subagents), and use subagents for low-entropy subtasks.
 
-  10. Do not redo the effort of other agents. If you see that another agent has already done something, you should not redo it. You should build on top of it.
+  10. Do not redo the effort of other agents (e.g. reproduction script). If you see that another agent has already done something, you should not redo it. You should build on top of it.
 
   (Open file: {open_file})
   (Current directory: {working_dir})
@@ -82,9 +87,9 @@ next_step_no_output_template: |-
 demonstration_template: |-
   Here are some demonstrations of how to correctly accomplish this task.
   It is included to show you how to correctly use the interface.
-  The demonstration shows how to use subagents for delegating some less complex tasks (e.g. reproducing the issue) to other agents.
-  You should use a mixture of both low-level (e.g. ls -F) and high-level (subtask_execute) commands to solve the issue. but mainly we recommend you rely on high level thinking and use the subagents for low-entropy subtasks. 
-  PLEASE DO USE THE SUBTASK_EXECUTE COMMAND.
+  The demonstration shows how to use subagents for delegating subtasks (e.g. reproducing the issue) to other agents.
+  You can use a mixture of both low-level (e.g. ls -F) and high-level (subtask_execute) commands to solve the issue. but mainly rely on high level thinking and use the subagents for low-entropy subtasks. 
+  PLEASE DO USE THE SUBTASK_EXECUTE COMMAND. WORK IN HIGHER LEVEL ABSTRACTION SPACE.
   You do not need to follow exactly what is done in the demonstration.
   --- DEMONSTRATION ---
   {demonstration}

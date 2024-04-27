@@ -251,7 +251,7 @@ class Agent:
         self.instance_args = instance_args
 
         system_msg = self.config.system_template.format(**self.system_args)
-        if self.is_sub_agent:
+        if not self.is_sub_agent:
             logger.info(f"SYSTEM ({self.name})\n{system_msg}")
 
         # initialize history with system message
@@ -534,7 +534,9 @@ class Agent:
 
         message = "\n".join(messages)
 
-        logger.info(f"🤖 MODEL INPUT\n{message}")
+        # display the model_input only if the last entry in self.histroy is not a demo (not that is_demo key might not be there in all enteries) or the agent is the main agent
+        if not (self.history[-1].get("is_demo", False) and self.is_sub_agent):
+            logger.info(f"🤖 MODEL INPUT\n{message}")
         self.history.append({"role": "user", "content": message, "agent": self.name})
 
         return self.model.query(self.local_history)
@@ -1057,9 +1059,9 @@ class Agent:
         # create the sub-agent args and config
         subagent_hepllm_levels = self.hepllm_levels - 1
         if subagent_hepllm_levels == 1:
-            subagent_config_file = "config/hepllm/default-v1-leaf-level.yaml"
+            subagent_config_file = "config/hepllm/default-v4-leaf-level.yaml"
         else:
-            subagent_config_file = "config/hepllm/default-v1-root-level.yaml"     
+            subagent_config_file = "config/hepllm/default-v2-root-level.yaml"     
         agent_args = AgentArguments(
             model=self.args.model,
             config_file=subagent_config_file,
@@ -1067,16 +1069,20 @@ class Agent:
             hepllm_levels=subagent_hepllm_levels)
         
         # Instantiate the sub-agent, depending on the root level
-        logger.info("INFO: Instantiating sub-agent...")
+        logger.info("🧑‍💻 SUB-AGENT: Instantiating sub-agent {} ...".format(agent_name))
         sub_agent = Agent(agent_name, agent_args, is_sub_agent=True)
 
         # create the setup args for the sub-agent
         sub_setup_args = copy.deepcopy(setup_args)
         sub_setup_args["subtask_instructions"] = subtask_instruction
 
+        # provide main agent history to the sub-agent for reference purposes
+        main_agent_history = self.prepare_main_agent_history()
+        sub_setup_args["main_agent_history"] = main_agent_history
+
         # synchronize the env and current state
-        env_vars = self.get_environment_vars(env)
-        cwd = env.communicate("pwd -P").strip()
+        # env_vars = self.get_environment_vars(env)
+        # cwd = env.communicate("pwd -P").strip()
         # init_observation = self.config._subroutines[agent_name].init_observation
         init_observation = "prev" #None
         if init_observation is not None:
@@ -1093,9 +1099,13 @@ class Agent:
                                     return_type="subtask_report",
                                     init_model_stats=self.model.stats,
                                 )
+        
+        # NOTE: experimental add the sub-agent history to the main agent history
+        self.history += sub_agent.history
 
-        self.set_environment_vars(env, env_vars)
-        env.communicate(f"cd {cwd}")
+        # put things back for env, args, etc for the main agent
+        # self.set_environment_vars(env, env_vars)
+        # env.communicate(f"cd {cwd}")
         self.model.stats.replace(sub_agent.model.stats)
         return sub_agent_report
 
@@ -1127,6 +1137,38 @@ class Agent:
         # self.model.stats.replace(sub_agent.model.stats)
         # return sub_agent_output
 
+    def prepare_main_agent_history(self):
+        """
+        Prepare the main agent history for the sub-agent.
+        """
+        history_template = """
+        ------------------ START MAIN AGENT HISTORY ------------------
+
+        {main_agent_history}
+        
+        ------------------ END MAIN AGENT HISTORY --------------------
+        """
+
+        # get the main agent history
+        history = [entry for entry in self.history if entry["role"] != "system" and ('is_demo' not in entry or not entry['is_demo'])]
+        # history = [entry for entry in history if entry["role"] != "system" and entry['is_demo'] == False]
+        # also remove the very first user message about the setup and issue info
+        if history[0]["role"] == "user":
+            history = history[1:]
+
+        # instead of joining the content, use a more structured way to present the history
+        # as in if the entry is by the assistant than it starts with "ACTION: " and if by the user than "OBSERVATION: "
+        history_message = '\n'.join([f"ACTION: {entry['content']}" if entry["role"] == "assistant" else f"OBSERVATION: {entry['content']}" for entry in history])
+        # history_message = '\n'.join([entry["content"] for entry in main_agent_history])
+
+        # prepare the main agent history
+        main_agent_history = history_template.format(main_agent_history=history_message)
+
+        # log the main agent history
+        # logger.info(f"INFO: Main agent history prepared for the sub-agent: \n{main_agent_history}")
+
+        return main_agent_history
+    
     def parse_subtask_execute(self, action):
         """
         Parse the subtask execute action into the agent name and the subtask instruction.
