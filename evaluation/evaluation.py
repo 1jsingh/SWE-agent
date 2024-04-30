@@ -20,7 +20,7 @@ from swebench.harness.constants import (
     INSTALL_FAIL,
 )
 from unidiff import PatchSet
-
+import copy
 
 def main(predictions_path, log_dir, swe_bench_tasks, testbed, skip_existing, timeout, verbose, conda_link, log_suffix, num_processes):
     # Check if paths exist
@@ -148,6 +148,17 @@ def main(predictions_path, log_dir, swe_bench_tasks, testbed, skip_existing, tim
         }
         resolution_status = get_resolution_status(report)
         scorecard["statuses"].append(resolution_status)
+
+        # print the resolution status, and in particular scorecard["test_results"] not including scorecard["test_results"]["sucess"]["PASS_TO_PASS"]
+        # surrounded with dividers for easy parsing
+        print("===============================================")
+        print(f"[{p[KEY_INSTANCE_ID]}] Resolution status: {resolution_status}")
+        print(f"[{p[KEY_INSTANCE_ID]}] Test results:")
+        # not including scorecard["test_results"]["sucess"]["PASS_TO_PASS"]
+        scorecard_copy = copy.deepcopy(scorecard)
+        del scorecard_copy["test_results"]["success"]["PASS_TO_PASS"]
+        print(json.dumps(scorecard_copy, indent=2))
+        print("===============================================")
 
         try:
             diff_obj = PatchSet(p[KEY_PREDICTION])

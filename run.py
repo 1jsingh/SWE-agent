@@ -73,6 +73,7 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
     # Number of tasks to run (useful for debugging)
     num_tasks: int = -1
     start_index: int = 0 # NOTE: used for debug
+    use_gold_patches: bool = False # NOTE: used for debug
 
     @property
     def run_name(self):
@@ -151,7 +152,13 @@ def main(args: ScriptArguments):
                 "tests": tests
             }
             
-            if args.agent.use_hepllm:
+            # Run the agent
+            # NOTE: if use_gold_patches is set to True, the agent will use the gold patches as the submission
+            # used for debugging purposes 
+            if args.use_gold_patches:
+                trajectory = []
+                info = {"submission": env.record["patch"]}
+            elif args.agent.use_hepllm:
                 # info, trajectory = agent.run_hepllm(
                 #     setup_args=setup_args,
                 #     env=env,
@@ -347,6 +354,7 @@ def get_args(args=None) -> ScriptArguments:
         suffix="",
         num_tasks=-1,
         start_index=0, # NOTE: used for debug
+        use_gold_patches=False, # NOTE: used for debug
         environment=EnvironmentArguments(
             image_name="sweagent/swe-agent:latest",
             data_path="princeton-nlp/SWE-bench_Lite",

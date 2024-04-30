@@ -959,11 +959,19 @@ class Agent:
         traj_dir: Optional[Path] = None,
         return_type: Optional[str] = "info",
         init_model_stats: Optional[APIStats] = None,
+        use_gold_patch: Optional[bool] = False,
     ):
         """
         Run the agent on an environment.
         Return the final value of the specified return type.
         """
+        
+        # use gold patch for debugging
+        if use_gold_patch:
+            trajectory = []
+            info = {"submission": setup_args["patch"]}
+            return info, trajectory
+
         done = False
         assert env.container_obj is not None
         assert self.config is not None  # mypy
@@ -1059,7 +1067,7 @@ class Agent:
         # create the sub-agent args and config
         subagent_hepllm_levels = self.hepllm_levels - 1
         if subagent_hepllm_levels == 1:
-            subagent_config_file = "config/hepllm/default-v4-leaf-level.yaml"
+            subagent_config_file = "config/hepllm/default-v5-leaf-level.yaml"
         else:
             subagent_config_file = "config/hepllm/default-v2-root-level.yaml"     
         agent_args = AgentArguments(
@@ -1069,7 +1077,7 @@ class Agent:
             hepllm_levels=subagent_hepllm_levels)
         
         # Instantiate the sub-agent, depending on the root level
-        logger.info("🧑‍💻 SUB-AGENT: Instantiating sub-agent {} ...".format(agent_name))
+        logger.info("🧑‍💻 SUB-AGENT: Instantiating sub-agent - {} ...".format(agent_name))
         sub_agent = Agent(agent_name, agent_args, is_sub_agent=True)
 
         # create the setup args for the sub-agent
@@ -1149,8 +1157,10 @@ class Agent:
         ------------------ END MAIN AGENT HISTORY --------------------
         """
 
-        # get the main agent history
-        history = [entry for entry in self.history if entry["role"] != "system" and ('is_demo' not in entry or not entry['is_demo'])]
+        # get the main agent history (using self.history will histories of all subagents as well)
+        use_local_history = False
+        history = self.local_history if use_local_history else self.history
+        history = [entry for entry in history if entry["role"] != "system" and ('is_demo' not in entry or not entry['is_demo'])]
         # history = [entry for entry in history if entry["role"] != "system" and entry['is_demo'] == False]
         # also remove the very first user message about the setup and issue info
         if history[0]["role"] == "user":

@@ -55,6 +55,8 @@ instance_template: |-
      
      If the bug reproduction script does not print anything when it succesfully runs, we recommend adding a print("Script completed successfully, no errors.") command at the end of the file,
      so that you can be sure that the script indeed ran fine all the way through. 
+  
+  1b. IMPORTANT: Usually the environment including the conda environment and all packages will already be installed for you. However, if you have trouble reproducing the github issue due to some errors, you can and should install the required packages required using standard bash commands. Remember you are root in the docker by default, so system level packages (if needed) can be installed without sudo.
 
   2. If you run a command and it doesn't work, try running a different command. A command that did not work once will not work the second time unless you modify it!
 
