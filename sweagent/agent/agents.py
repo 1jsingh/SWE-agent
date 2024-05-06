@@ -1109,7 +1109,8 @@ class Agent:
                                 )
         
         # NOTE: experimental add the sub-agent history to the main agent history
-        self.history += sub_agent.history
+        # self.history += sub_agent.history
+        self.history += sub_agent.filter_history(sub_agent.history)
 
         # put things back for env, args, etc for the main agent
         # self.set_environment_vars(env, env_vars)
@@ -1145,6 +1146,21 @@ class Agent:
         # self.model.stats.replace(sub_agent.model.stats)
         # return sub_agent_output
 
+    def filter_history(self, history):
+        """
+        Filter the history to remove the assistant's history.
+
+        removes the initial system message, demo and the first user message after demo
+        """
+        # first lets remove the system message and the demo
+        filtered_history = [entry for entry in history if entry["role"] != "system" and ('is_demo' not in entry or not entry['is_demo'])]
+        
+        # also remove the very first user message about the setup and issue info
+        if filtered_history[0]["role"] == "user":
+            filtered_history = filtered_history[1:]
+
+        return filtered_history
+    
     def prepare_main_agent_history(self):
         """
         Prepare the main agent history for the sub-agent.

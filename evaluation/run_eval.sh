@@ -76,9 +76,10 @@ else
         --swe_bench_tasks "$dataset_name_or_path" \
         --log_dir "$results_dir" \
         --testbed "$testbed_dir" \
-        # --skip_existing \
         --timeout 900 \
-        --verbose
+        --verbose \
+        --num_processes 4 \
+        --skip_existing
 fi
 
 # # Run the Python script with the specified arguments

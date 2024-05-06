@@ -27,8 +27,11 @@ from sweagent import (
 )
 from swebench import KEY_INSTANCE_ID, KEY_MODEL, KEY_PREDICTION
 from unidiff import PatchSet
-
 from sweagent.environment.utils import InvalidGithubURL, get_associated_commit_urls, get_gh_issue_data, parse_gh_issue_url
+
+# NOTE: used for multiprocessing
+from multiprocessing import Pool
+from functools import partial
 
 handler = RichHandler(show_time=False, show_path=False)
 handler.setLevel(logging.DEBUG)
@@ -37,6 +40,9 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 logger.propagate = False
 logging.getLogger("simple_parsing").setLevel(logging.WARNING)
+
+
+GOLD_TEST = "/home/jas/project/qstar/SWE-agent/trajectories/gold/azure-gpt4__SWE-bench_Lite__test__default-v4-root-level__t-0.00__p-0.95__c-10.00__install-1__test_0_all_run1_gold_patch/results.json"
 
 
 @dataclass(frozen=True)
@@ -74,6 +80,9 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
     num_tasks: int = -1
     start_index: int = 0 # NOTE: used for debug
     use_gold_patches: bool = False # NOTE: used for debug
+    exp_subdir: str = "latest" # NOTE: used for subdir in trajectories directory
+    filter_gold_patch_positives: bool = False # NOTE: used for debug
+    gold_patch_results_file: str = "gold_patch_results.json" # NOTE: used for debug
 
     @property
     def run_name(self):
@@ -95,14 +104,21 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
             + (f"__{self.suffix}" if self.suffix else "")
         )
 
+# use multiprocessing to run multiple tasks in parallel if gold patches are used
+def save_gold_patch(index, env, traj_dir):
+    trajectory = []
+    info = {"submission": env.data[index]["patch"]}
+    save_predictions(traj_dir, env.data[index]["instance_id"], info)
+    save_patch(traj_dir, env.data[index]["instance_id"], info)
+
 
 def main(args: ScriptArguments):
     logger.info(f"📙 Arguments: {args.dumps_yaml()}")
     agent = Agent("primary", args.agent)
-
     env = SWEEnv(args.environment)
 
-    traj_dir = Path("trajectories") / Path(getuser()) / args.run_name
+    # traj_dir = Path("trajectories") / Path(getuser()) / args.run_name
+    traj_dir = Path("trajectories") / Path(args.exp_subdir) / args.run_name
     traj_dir.mkdir(parents=True, exist_ok=True)
 
     save_arguments(traj_dir, args)
@@ -110,9 +126,46 @@ def main(args: ScriptArguments):
     num_tasks = args.num_tasks if args.num_tasks > 0 else len(env.data)
     num_tasks = min(num_tasks, len(env.data) - args.start_index)
     assert num_tasks > 0, f"num_tasks={num_tasks} must be positive"
+
+    # filter gold patch positives
+    if args.filter_gold_patch_positives:
+        # open the results json file
+        with open(args.gold_patch_results_file, "r") as f:
+            gold_patch_results = json.load(f)
+        # get positive instance ids
+            resolved_instance_ids = gold_patch_results['resolved']
+            logger.info(f"🔍 Found {len(resolved_instance_ids)} resolved instances ...")
+
+    # # NOTE: if use_gold_patches is set to True, the agent will use the gold patches as the submission
+    # # used for debugging purposes 
+    # # use multiprocessing to run multiple tasks in parallel if gold patches are used
+    # if args.use_gold_patches:
+    #     with Pool(4) as p:
+    #         # Pass the necessary arguments to the function
+    #         func = partial(save_gold_patch, env=env, traj_dir=traj_dir)
+    #         p.map(func, range(args.start_index, args.start_index + num_tasks))
+    #     return
+
     for index in range(args.start_index, args.start_index + num_tasks):
         # index += args.start_index # TODO: remove this line
         try:
+            # NOTE: if use_gold_patches is set to True, the agent will use the gold patches as the submission
+            # used for debugging purposes 
+            if args.use_gold_patches:
+                logger.info(f"🔮 Using gold patches as submission ... task {index}")
+                trajectory = []
+                info = {"submission": env.data[index]["patch"]}
+                save_predictions(traj_dir, env.data[index]["instance_id"], info)
+                save_patch(traj_dir, env.data[index]["instance_id"], info)
+                continue
+            
+            # filter gold patch negatives
+            if args.filter_gold_patch_positives:
+                instance_id = env.data[index]["instance_id"]
+                if instance_id not in resolved_instance_ids:
+                    logger.info(f"❎ Skipping instance {instance_id} with idx:{index} as the gold patch is not working on this instance ...")
+                    continue
+
             # Reset environment
             instance_id = env.data[index]["instance_id"]
             assert isinstance(instance_id, str)  # mypy
@@ -152,13 +205,8 @@ def main(args: ScriptArguments):
                 "tests": tests
             }
             
-            # Run the agent
-            # NOTE: if use_gold_patches is set to True, the agent will use the gold patches as the submission
-            # used for debugging purposes 
-            if args.use_gold_patches:
-                trajectory = []
-                info = {"submission": env.record["patch"]}
-            elif args.agent.use_hepllm:
+            
+            if args.agent.use_hepllm:
                 # info, trajectory = agent.run_hepllm(
                 #     setup_args=setup_args,
                 #     env=env,
@@ -355,6 +403,7 @@ def get_args(args=None) -> ScriptArguments:
         num_tasks=-1,
         start_index=0, # NOTE: used for debug
         use_gold_patches=False, # NOTE: used for debug
+        exp_subdir="hepllm-v0.3",
         environment=EnvironmentArguments(
             image_name="sweagent/swe-agent:latest",
             data_path="princeton-nlp/SWE-bench_Lite",
@@ -376,6 +425,8 @@ def get_args(args=None) -> ScriptArguments:
             hepllm_levels=1,
         ),
         actions=ActionsArguments(open_pr=False, skip_if_commits_reference_issue=True),
+        filter_gold_patch_positives=False,
+        gold_patch_results_file=GOLD_TEST,
     )
 
     # Nicer yaml dumping of multiline strings

@@ -393,7 +393,7 @@ def get_instances(file_path: str, base_commit: str = None, split: str = None, to
 
     # Attempt load from HF datasets as a last resort
     try:
-        return load_dataset(file_path, split=split)
+        return load_dataset(file_path, split=split, download_mode="force_redownload")
     except:
         raise ValueError(
             f"Could not load instances from {file_path}. "
