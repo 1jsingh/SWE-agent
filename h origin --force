@@ -1,0 +1,1155 @@
+[33mcommit 70bb06f1421f70e3d944ce54375dcd6f9a972a5d[m[33m ([m[1;36mHEAD -> [m[1;32mhelper-v0.4[m[33m)[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Tue May 7 05:11:22 2024 +0000
+
+    add: dcokerised evaluation
+
+[33mcommit 8b3e800bb5fc5105419f3f798201a5eb411add2b[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Tue May 7 05:09:32 2024 +0000
+
+    add: dcokerised evaluation
+
+[33mcommit 35fa3a482a49e31760b528b3694bd6c7ada37b72[m[33m ([m[1;31morigin/helper-v0.3[m[33m, [m[1;32mhelper-v0.3[m[33m)[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Mon May 6 06:19:24 2024 +0000
+
+    update: config file and additional experiments
+
+[33mcommit a2dff0d0ce3325e7c72ca73d62ed5f1c26a3e29e[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Tue Apr 30 06:08:28 2024 +0000
+
+    debug: analysis and add gold patch use for debug
+
+[33mcommit 020de5e38c51035702bdf722da8aa239f732ec9a[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Sat Apr 27 03:30:33 2024 +0000
+
+    feat: editor handover to subagent
+
+[33mcommit 243de329f9fa21fa0ecf8d2a3233e7fa662dcb7b[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Thu Apr 25 03:30:58 2024 +0000
+
+    feat: initial stateless heirarchial planning
+
+[33mcommit 195c397e5d372160d00cb48b36ad1e1e9774cc42[m[33m ([m[1;31morigin/helper-v0.2[m[33m, [m[1;32mhelper-v0.2[m[33m)[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Tue Apr 23 23:56:43 2024 +0000
+
+    add: initial hepllm framework
+
+[33mcommit 721428ef7111deeedcd76da00f57a19cc8e56054[m[33m ([m[1;31morigin/helper-v0.1[m[33m, [m[1;32mhelper-v0.1[m[33m)[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Mon Apr 22 04:53:00 2024 +0000
+
+    update: minor changes
+
+[33mcommit 1ead0c2be6e5b95764e9da737f3ed4b437b45f65[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Fri Apr 19 05:49:51 2024 +0000
+
+    rm : link
+
+[33mcommit 4eaafa7d6a758cc076f7f63e9be574d9cad77757[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Fri Apr 19 05:49:21 2024 +0000
+
+    add: state react implementation
+
+[33mcommit cc5b266a0ed3c6f590836795906f2bf21f3e1262[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Thu Apr 18 01:10:13 2024 +0000
+
+    update: state-react-v1
+
+[33mcommit 4d1e3bec1a55869d8687346447efb7c06d00b956[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Wed Apr 17 00:45:46 2024 +0000
+
+    update: iteration log
+
+[33mcommit 306a6f330f6bdb686eb2e97d075ece8dc5685915[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Tue Apr 16 04:51:33 2024 +0000
+
+    add: basic experiment log file
+
+[33mcommit e5167f233eb7bceb199043656a2679f2397859db[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Tue Apr 16 04:43:13 2024 +0000
+
+    add: baseline and eval docker scripts
+
+[33mcommit 19953c19188fec6f6e9497afb3c07c2a89d4ff8e[m
+Author: 1jsingh <1.jaskiratsingh@gmail.com>
+Date:   Mon Apr 15 01:53:56 2024 +0000
+
+    add: docker and experiment script
+
+[33mcommit 30364138ffbe0542e50fc84eca144a04240941c7[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 13 16:22:59 2024 -0400
+
+    Make patch note more noticeable (#214)
+    
+    * WIP
+    
+    * More noticeable message about patch file being produced
+    
+    Closes #206
+
+[33mcommit d411312db1af378fa0d1283194ae045e5181a6d7[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 13 15:23:14 2024 -0400
+
+    Fix: undefined local var replay_task_instances_path
+
+[33mcommit 3a50d0b97658e88b3bbc67799be4537cddeac374[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 13 14:24:32 2024 -0400
+
+    No need to specify platform in docker command
+
+[33mcommit 96fffbc0076606ed081c61eb3d4ead1f247ec8cf[m
+Author: zhipengzuo <54702578+zhipengzuo@users.noreply.github.com>
+Date:   Sun Apr 14 02:23:15 2024 +0800
+
+    No need to specify platform in docker pull (#210)
+    
+    Signed-off-by: 勇里 <yongli.zzp@antgroup.com>
+
+[33mcommit 068aadc26abb56cb8e69eacc3a430bd7814e29fb[m
+Author: Carlos E. Jimenez <cjsaltlake@gmail.com>
+Date:   Sat Apr 13 13:42:05 2024 -0400
+
+    Update README.md
+
+[33mcommit 7c85d4a4442638ecbc4b37ee724c103db2020fef[m
+Author: RaGe <foragerr@users.noreply.github.com>
+Date:   Sat Apr 13 12:05:17 2024 -0400
+
+    nit: typos (#212)
+
+[33mcommit fead564476940005ce2aad7135f1614b17fb785e[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Fri Apr 12 00:50:32 2024 -0400
+
+    Update README
+
+[33mcommit 388d79f45589d50ce54fe4a5261991cd1a31067d[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 11 13:42:35 2024 -0400
+
+    Improve --help message option headers (#192)
+    
+    The docstrings of the argument dataclasses are also used in the --help
+    message. If they aren't set, the signature of the dataclass is shown
+    instead.
+
+[33mcommit b084c9fecb0c7cc8ff65bf87aa0c5310ad811961[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 11 11:13:51 2024 -0400
+
+    Make github token fully optional (#189)
+    
+    Closes #152
+
+[33mcommit 74c6123d5abdbad2eb4f6ae951ddf3be50b25038[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 11 11:03:16 2024 -0400
+
+    Typing fixes & improvements (#187)
+
+[33mcommit e39e2cfec28b807e99f243d7783a370ef1e21182[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 11 10:46:01 2024 -0400
+
+    Test creation of persistent container (#184)
+
+[33mcommit 97afe430dabe38cb74edaa4c7789eccc23abe407[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 11 10:15:51 2024 -0400
+
+    Remove left-over debug statements
+
+[33mcommit f7420bb06f56a24a9f6bf07da9fa428796ed77d2[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Wed Apr 10 21:33:23 2024 -0400
+
+    Update evaluation to reflect swebench `get_model_report`
+
+[33mcommit 49d34c5d78317c9fa48773ad5cdf5fe8af5776f1[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 18:39:24 2024 -0400
+
+    Use ruff and enable some more checks (#174)
+    
+    * Check for unused imports and variables
+    
+    * Fix some issues
+    
+    * Remove some more unneeded imports
+    
+    * Switch to using ruff for checks
+    
+    * Remove two more imports
+
+[33mcommit 601acaeda1c19f8b4c729c7e0d4e501b9764c062[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 18:30:31 2024 -0400
+
+    Simple typing improvements
+
+[33mcommit 7a5c8de7bd3a751559a14d6329a6b5524d2a29d7[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 18:28:32 2024 -0400
+
+    Fix signature of ParseCommandDetailed (#177)
+
+[33mcommit eb72968a4da0a67f73eb526c1d5adedbfad36891[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 18:27:54 2024 -0400
+
+    Fix warnings about simple_parsing import paths (#176)
+
+[33mcommit 38f9cf42a6fa102bbf208ddd1233c34da5268d1b[m
+Author: Yeonwoo Sung <neos960518@gmail.com>
+Date:   Thu Apr 11 07:15:49 2024 +0900
+
+    Minor improvements for models.py
+    
+    * refactor: Simple refactoring for clean code
+    
+    * change the fstring issue for flake8
+    
+    * Fix up prefix matching issue
+    
+    * resolve conflicts
+    
+    * update the model list
+
+[33mcommit 31d143c1a4f54e5469d6ef0ea59b186788a83c82[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 17:57:05 2024 -0400
+
+    CI: Test OpenAI model (#166)
+
+[33mcommit 75e47ab3b7e6256f52fff936826513f35ac9f61a[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 15:19:34 2024 -0400
+
+    Issue template: Two more checkboxes for dupes/version
+
+[33mcommit bfd6532ab2eaa54296cd6ac9f122424b51ae7475[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 12:23:32 2024 -0400
+
+    Allow to supply installation commands when running on gh issues (#153)
+    
+    * Allow to supply installation commands when running on gh issue
+    
+    * Add doc for env specification
+
+[33mcommit 811da5e0b583297470a843ac99d9627ea2aba5e6[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 11:50:03 2024 -0400
+
+    Fix: Correctly catch docker connection errors
+
+[33mcommit 72775280795d2c7b3cbeaaa537c1dc74b38f3e87[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 11:45:43 2024 -0400
+
+    Improve error handling of docker issues (#165)
+    
+    Closes #114
+    Closes #123
+    Closes #159
+
+[33mcommit 104d31a396bb2501e623a1fd12e446307ff50feb[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 11:37:32 2024 -0400
+
+    Issue templates: 'question' label; disam from bugs
+
+[33mcommit c3c67a74494f261071fe5d0fc7cecc7dc47a8cc2[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 11:36:40 2024 -0400
+
+    Issues: Add 'question' label to questions; distinguish from bug
+
+[33mcommit 5a6f6a27f6927a66813782d10564efb55a9c4a72[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 11:07:13 2024 -0400
+
+    Doc fix: Change wording (docker socket)
+
+[33mcommit dde56b31b5f951ade6b5381fcffa186531a22921[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 10:55:31 2024 -0400
+
+    Doc: More installation hints
+
+[33mcommit e7f4d99015b214434af0879f0fcac0914a8de659[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 10 10:46:00 2024 -0400
+
+    Doc style: Use GH markdown admonitions
+
+[33mcommit e311698dfbe32034bfb1cf602b64bcc8628c2ff0[m
+Author: Branden Collingsworth <collingsworth@gmail.com>
+Date:   Tue Apr 9 15:50:34 2024 -0500
+
+    Fix typo in README.md (#155)
+    
+    typo in `docker built -t sweagent/swe-agent-run:latest .` corrected to `build`
+    
+    [skip-CI]
+
+[33mcommit 1efbeb9bfe77ab88e196dfb021e123525534c90a[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Tue Apr 9 12:55:40 2024 -0400
+
+    Increase coverage of swe-env tests (#154)
+
+[33mcommit b03598d40573b8ddaed761164465a1bc21d9d9ca[m
+Author: Carlos E. Jimenez <cjsaltlake@gmail.com>
+Date:   Tue Apr 9 12:31:54 2024 -0400
+
+    Add ollama link
+
+[33mcommit c3f932626ae0be60b08e72d7f6f3813b98e9e003[m
+Merge: 5fd722b ca0f2a1
+Author: Carlos E. Jimenez <cjsaltlake@gmail.com>
+Date:   Tue Apr 9 11:35:57 2024 -0400
+
+    Merge pull request #147 from moresearch/patch-1
+    
+    Update README.md
+
+[33mcommit ca0f2a1d17b82a24800618db77534949c1282a2a[m
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Tue Apr 9 11:32:01 2024 -0400
+
+    Update README.md
+
+[33mcommit 6f7b46466b4ec8ab920eba73e36b1ad93c34190a[m
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Tue Apr 9 11:28:55 2024 -0400
+
+    Update README.md
+
+[33mcommit cd822017406eb08dfd9e3004cf4a43b32f9d31b5[m
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Tue Apr 9 11:27:01 2024 -0400
+
+    Update README.md
+
+[33mcommit 1c339521637538e0790a6955ecad31668314f050[m
+Author: Mohamed A. Fouad <111041768+moresearch@users.noreply.github.com>
+Date:   Tue Apr 9 10:04:46 2024 -0400
+
+    Update README.md
+    
+    Add Ollama support section
+
+[33mcommit 5fd722bc8f586ff59ecbc5f0a89817ed40bec3b9[m
+Author: Ofir Press <ofirp@cs.washington.edu>
+Date:   Tue Apr 9 01:32:04 2024 -0400
+
+    Update README.md - change LLM to LM :)
+
+[33mcommit d469f49aae44ec1c0e39ef4a37aef293adf58764[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Mon Apr 8 19:35:08 2024 -0400
+
+    Doc: Remove architecture notice for docker
+
+[33mcommit 2b51d41c834327ee554819ac147882777e004c50[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Mon Apr 8 18:52:34 2024 -0400
+
+    Improve test coverage (#142)
+
+[33mcommit f541351572099920a753941a5263e1f804d66f6b[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Mon Apr 8 17:55:20 2024 -0400
+
+    multiplatform docker builds (#131)
+    
+    * Select the right conda path from within the container
+    
+    * Build multiplatform images
+
+[33mcommit 2ca7954ca1d799d9c8599e80861d99208168bd43[m
+Author: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+Date:   Mon Apr 8 17:54:01 2024 -0400
+
+    chore: update pre-commit hooks (#141)
+    
+    updates:
+    - [github.com/pre-commit/pre-commit-hooks: v4.5.0 → v4.6.0](https://github.com/pre-commit/pre-commit-hooks/compare/v4.5.0...v4.6.0)
+    - [github.com/pycqa/flake8: 4.0.1 → 7.0.0](https://github.com/pycqa/flake8/compare/4.0.1...7.0.0)
+    
+    Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+
+[33mcommit 6820e3e007c4d7000907078887435257383b429d[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Mon Apr 8 16:55:58 2024 -0400
+
+    Add codecov config and badge
+
+[33mcommit 0464546550ea656b9822f0a24ba5da2ac2444193[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Mon Apr 8 16:53:54 2024 -0400
+
+    Upload coverage data to codecov (#140)
+
+[33mcommit d14f0e556bf2231a37d05e7327817d20836be848[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Mon Apr 8 12:38:46 2024 -0400
+
+    Better link for issue formatting
+
+[33mcommit abf97cddf44cc22e624d0bd0ba1b035adac7fc6a[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Mon Apr 8 12:36:35 2024 -0400
+
+    Improve bug report template
+
+[33mcommit 6c7f7031b75a6414d7da368d19ff1992a6cb52cb[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Mon Apr 8 12:35:59 2024 -0400
+
+    Improve bug report template
+
+[33mcommit 91d4dce6a55a55d5f7ba536b56bf49a1f60e7c6b[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Mon Apr 8 12:35:39 2024 -0400
+
+    Improve bug report template
+
+[33mcommit 53fb952688bdc1c730207331927663ddeae608ad[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Mon Apr 8 12:35:09 2024 -0400
+
+    Improve bug template
+
+[33mcommit 70ef7fcf71f44efd407d1869b7620e8394d25d57[m
+Author: Ofir Press <ofirp@cs.washington.edu>
+Date:   Mon Apr 8 12:02:22 2024 -0400
+
+    Update README.md - move badges to bottom
+
+[33mcommit 5397244333e9f7286031c33c15e00c5b3b3eae94[m
+Merge: 580efbe de70fe3
+Author: Ofir Press <ofirp@cs.washington.edu>
+Date:   Mon Apr 8 01:29:33 2024 -0400
+
+    Merge pull request #133 from eltociear/patch-3
+    
+    Fix typo in server.py
+
+[33mcommit de70fe3dcfb630976925b9c3437a946f67cfaced[m
+Author: Ikko Eltociear Ashimine <eltociear@gmail.com>
+Date:   Mon Apr 8 14:23:38 2024 +0900
+
+    Fix typo in server.py
+    
+    seperately -> separately
+
+[33mcommit 580efbee9306dcc41585a1c473a5a23313f25cd4[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 20:58:27 2024 -0400
+
+    Advertise experimental amd64 docker builds
+
+[33mcommit f155e251b1219977300e78c85fb0ec5ed13cc22a[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 20:39:13 2024 -0400
+
+    Revert "Remove azure override of model name (#127)"
+    
+    This reverts commit 311467c9620a22c3f7b95c7e3a1dbb2c4794bc92.
+    
+    See discussion in https://github.com/princeton-nlp/SWE-agent/pull/127
+
+[33mcommit 7b5ab3df22712778bfd22726fa93f0dd247ba185[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 18:37:25 2024 -0400
+
+    Fix: Choosing TogetherAI models (#130)
+    
+    Closes 101
+
+[33mcommit aa1ffaea2de1f0bfa9ae36b36ee94abf9f07c087[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 17:38:19 2024 -0400
+
+    Add CI badge
+
+[33mcommit e44847f258227ed7f13c926b81d09c6211326aa6[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 16:46:26 2024 -0400
+
+    Add CI with github actions
+
+[33mcommit af8c67005ca80c3e3bc7e8ec558b28c6befa9038[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 16:43:08 2024 -0400
+
+    Add run_replay integration test
+
+[33mcommit f60528710bbd59e3ac5c3a603287b03b3578a5fe[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 17:35:22 2024 -0400
+
+    Add markdown link checker badge
+
+[33mcommit 06309e0edb88f4f8cc462c65739a8ea3a71ae7be[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 17:34:30 2024 -0400
+
+    Add markdown link checker (#129)
+    
+    * Add markdown link checker
+    
+    * Fix & ignore broken markdown links
+
+[33mcommit 7d71cbaeb38a7dbdc7d3e65e30cf17a38d2a46f3[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 16:49:41 2024 -0400
+
+    Add pre-commit badge
+
+[33mcommit 311467c9620a22c3f7b95c7e3a1dbb2c4794bc92[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 16:21:41 2024 -0400
+
+    Remove azure override of model name (#127)
+
+[33mcommit abb9552c429f550ad4d4cdd7528c5580f2d329d9[m
+Author: bvandorf <bvandorf@gmail.com>
+Date:   Sun Apr 7 15:18:04 2024 -0500
+
+    Allow to configure openapi base url (#118)
+    
+    
+    
+    ---------
+    
+    Co-authored-by: Kilian Lieret <kilian.lieret@posteo.de>
+
+[33mcommit 8521a1fd08ef43c2a8c84254660bfa0a80002811[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 16:07:24 2024 -0400
+
+    Separately save patch files + some typing cleanup (#126)
+    
+    Closes #41
+
+[33mcommit 03c535fe266c5c23da4078b1c4a3d3e5c8803bb7[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 15:24:29 2024 -0400
+
+    Do not leave python when calling run.py
+    
+    This helps with debugging run_replay
+
+[33mcommit c2b63d2f8ecb13a7352b4e29d1c33cb0fabbf708[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 15:24:10 2024 -0400
+
+    Fix: Unbound local variable/name shadowing
+    
+    This probably only ran because of name shadowing
+
+[33mcommit 2eb88739e4c6ecf05c2e201ddd8ebb6b9b4f18d1[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 15:14:34 2024 -0400
+
+    Forward unparsed arguments in run_replay.py to run.py
+
+[33mcommit bdd5c4c10cee41b499a6efac769750020dccd5cd[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 15:14:22 2024 -0400
+
+    Add flag to raise exceptions in run.py
+
+[33mcommit b21e9a4a1c67fa56c9656954e25f8287a15d4109[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sun Apr 7 14:55:49 2024 -0400
+
+    Code quality: Improve inference of return type
+
+[33mcommit 5ccfa12f4a9cdc0772de269e6b8cc6bd0231eb14[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 6 21:23:34 2024 -0400
+
+    Warning about containers being only for arm64 at the moment
+
+[33mcommit 147e9bd4693abed9d3899628561450af7081e3b4[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Sat Apr 6 18:57:31 2024 -0400
+
+    Change doc_improvement to question
+
+[33mcommit c60bcf6c2f89484755daa3b002a4a244204c0e0a[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Sat Apr 6 17:29:35 2024 -0400
+
+    Add template workflow diagram
+
+[33mcommit c178bd4e52212a014c5ae0a68098ebae74d3f4df[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 6 15:01:20 2024 -0400
+
+    Improve bug report template (#113)
+
+[33mcommit ffa05b47becf14379889d701481346f91768729e[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 6 14:44:13 2024 -0400
+
+    Doc: Missing backslash
+
+[33mcommit 6202dbd71fb0abb75232f6ecd99662e2cd2db3cf[m
+Merge: 43b1058 c7b026c
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Sat Apr 6 14:40:59 2024 -0400
+
+    Merge branch 'main' of github.com:princeton-nlp/SWE-agent
+
+[33mcommit 43b105854d58893dd479103ea16b02b856770ad5[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Sat Apr 6 14:40:55 2024 -0400
+
+    Add docs for how to write your own commands
+
+[33mcommit c7b026cd1e0d605ea50e19cad63d934743dea239[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 6 14:38:01 2024 -0400
+
+    Mount keys.cfg within container
+    
+    Workaround for #109
+
+[33mcommit 9edc618b27a8940c04e02d506279190ed9385ed5[m
+Merge: 84aeda2 3925353
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Sat Apr 6 13:32:03 2024 -0400
+
+    Merge branch 'main' of github.com:princeton-nlp/SWE-agent
+
+[33mcommit 84aeda2fe4ed3123bf35efa6e50456a356ef637e[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Sat Apr 6 13:31:58 2024 -0400
+
+    Add templates for issues, pr
+
+[33mcommit 392535327818b83467411aa342b8fa109c72d47f[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 6 13:16:29 2024 -0400
+
+    Fix release script: latest tag can already exist on dockerhub
+
+[33mcommit eb22ef90e93524d1e36e33758f42d7df8fc0333e[m[33m ([m[1;33mtag: v0.1.2[m[33m)[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 6 12:47:46 2024 -0400
+
+    Doc: Remove leftover "click to expand box"
+
+[33mcommit 985c08586e168cb719bafc296335d7c676336f1b[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 6 12:26:44 2024 -0400
+
+    Make sure that keys.cfg doesn't get copied to Docker
+
+[33mcommit b8c4b04f009c16983b13a5cb5b41d4a854cc33d6[m
+Author: Chapman Pendery <35637443+cpendery@users.noreply.github.com>
+Date:   Sat Apr 6 08:48:52 2024 -0700
+
+    fix: bad newline getting sent on windows (#79)
+    
+    Signed-off-by: Chapman Pendery <cpendery@microsoft.com>
+
+[33mcommit d70c4a057c73a692ea11376299ce1d2001169043[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 6 11:33:44 2024 -0400
+
+    Add issue template
+
+[33mcommit 221b8e58d5cc606cbdb22adca33eedcbef831d5a[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 6 11:16:02 2024 -0400
+
+    Doc: Consolidate containerized run examples
+
+[33mcommit 230b20aee7cf65fd900fe9caa9eb4b4b07d35a9e[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Sat Apr 6 10:57:47 2024 -0400
+
+    Fix: Update default image name (#102)
+
+[33mcommit 3742590eb684770b9b401c9787be92739bd2975a[m
+Author: Ofir Press <ofirp@cs.washington.edu>
+Date:   Fri Apr 5 23:41:02 2024 -0400
+
+    Update README.md
+
+[33mcommit c8fbe32b9554ce2684c7f64e1b646c6619ab1255[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 23:04:59 2024 -0400
+
+    Shell script highlighting in readme
+
+[33mcommit 4144076ab2da8cdc474414aebd313fb0039ffb76[m
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Fri Apr 5 22:27:11 2024 -0400
+
+    Update run.py default model arguments
+    
+    Update default model arguments - greedy decoding and 3.00 per instance cost
+
+[33mcommit 560363e5931ca6e2be7b7c2df2a69ef038e7b3af[m
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Fri Apr 5 22:26:08 2024 -0400
+
+    Update run_from_url.sh
+
+[33mcommit 5d579f5549d9ce4cbf7256762502ca9c584a6932[m
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Fri Apr 5 22:25:44 2024 -0400
+
+    Update run.sh
+
+[33mcommit d195dc1b9dca2ab5dbfe1e6498e0d0f1e9ec8d57[m
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Fri Apr 5 22:25:26 2024 -0400
+
+    Update README.md
+
+[33mcommit 01d9baed73e0d4c68793e99ad0557c017cffa740[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 22:03:45 2024 -0400
+
+    Mention --open_pr flag
+
+[33mcommit 723d2aa4ede0f8ec73bce1e355abe262ac1f8911[m
+Author: Ofir Press <ofirp@cs.washington.edu>
+Date:   Fri Apr 5 21:53:52 2024 -0400
+
+    Update README.md
+
+[33mcommit 0f9f56eea8a933fb66a97498bb0cae79865079dc[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 21:11:58 2024 -0400
+
+    Add note about windows with conda installation
+
+[33mcommit 0a4ff3993e801d6cb658cef03ebf959412241797[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 21:02:54 2024 -0400
+
+    Small style fixes to readme
+
+[33mcommit 25931105049ead034913f608eef5354505f65a0b[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 21:00:23 2024 -0400
+
+    Small refactor: Add quicksart section (#56)
+    
+    * Restructure readme: quickstart before eval
+    
+    * Remove mention of PR creation
+
+[33mcommit e0ba41d38faa3ab7ad3be10e1d650fc85db606fd[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 20:56:59 2024 -0400
+
+    Add run via docker instructions to readme (#90)
+    
+    * Add run via docker instructions to readme
+    
+    * Add note about windows
+    
+    * Add proper hint styling
+
+[33mcommit 9ab0d05649a134fa70de1ebaf44524fca0b18a68[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 20:19:46 2024 -0400
+
+    Fix docker setup: updated image names (#87)
+
+[33mcommit c5a7f1ff2efd13937cf980faf49795a89b994e18[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 20:14:20 2024 -0400
+
+    Add release script for dockerhub (#86)
+
+[33mcommit 29cea49fce2ce733063035a1c37b7351e44d5053[m[33m ([m[1;33mtag: v0.1.1[m[33m)[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 19:20:09 2024 -0400
+
+    Fix: Using docker images from dockerhub (#85)
+
+[33mcommit acdab0eb9b75da9ba2541b4acb4f3f270902c5ca[m[33m ([m[1;33mtag: v0.1.0[m[33m)[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 18:22:39 2024 -0400
+
+    Containerize application (#81)
+
+[33mcommit a34e74afd480e6242b222161a14aedd72a65b634[m
+Author: Ofir Press <ofirp@cs.washington.edu>
+Date:   Fri Apr 5 17:13:26 2024 -0400
+
+    Update README.md
+
+[33mcommit 5920cc079e3ee0258c8ce650608a19563a37b0ba[m
+Merge: db34416 d96ff41
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Fri Apr 5 14:38:24 2024 -0400
+
+    Merge branch 'main' of github.com:princeton-nlp/SWE-agent
+
+[33mcommit db344162b1d243eff87fd5fb291313839ba99124[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Fri Apr 5 14:38:07 2024 -0400
+
+    Clean up run_replay
+
+[33mcommit d96ff41a0cab96b7a61195d43a3be22b9b8ced59[m
+Merge: 55c6b78 b13c1b8
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Fri Apr 5 11:04:52 2024 -0700
+
+    Merge pull request #65 from princeton-nlp/search-fix
+    
+    Fix searching for flag-like strings, e.g., search_file "--flag"
+
+[33mcommit 55c6b7895ce02f79e655a773caa7aa96a855835e[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Fri Apr 5 13:58:48 2024 -0400
+
+    Add try/catch around PatchSet creation in evaluation
+
+[33mcommit 95deb5deaccb2d1e72b49ad3c8c128a13dc16eeb[m
+Author: Chapman Pendery <35637443+cpendery@users.noreply.github.com>
+Date:   Fri Apr 5 09:36:33 2024 -0700
+
+    feat: add support for azure openai (#16)
+    
+    * feat: add support for azure openai
+    
+    Signed-off-by: Chapman Pendery <cpendery@microsoft.com>
+    
+    * fix: feedback
+    
+    Signed-off-by: Chapman Pendery <cpendery@microsoft.com>
+    
+    * fix: add api_version
+    
+    Co-authored-by: Massimiliano Pronesti <massimiliano.pronesti@gmail.com>
+    
+    * docs: add azure openai version to readme
+    
+    Signed-off-by: Chapman Pendery <cpendery@microsoft.com>
+    
+    * style: fix formatting
+    
+    Signed-off-by: Chapman Pendery <cpendery@microsoft.com>
+    
+    ---------
+    
+    Signed-off-by: Chapman Pendery <cpendery@microsoft.com>
+    Co-authored-by: Massimiliano Pronesti <massimiliano.pronesti@gmail.com>
+
+[33mcommit 09da9963fbb784a0d6007022b95dccb43a1d12b0[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 12:14:03 2024 -0400
+
+    Fix: Allow run_replay with github URLs as data_path (#58)
+    
+    Closes #47
+
+[33mcommit 29c05c952d2c85810865cb7f9545d6e8b919c2c6[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Fri Apr 5 12:11:55 2024 -0400
+
+    Fix: Unexpected keyword 'split' in load_dataset (#76)
+    
+    Closes #70
+
+[33mcommit b13c1b8fecd874c23779c87721e2cd12aa3fe56c[m[33m ([m[1;31mupstream/search-fix[m[33m, [m[1;31morigin/search-fix[m[33m)[m
+Author: CodeCreator <wettig.alexander@gmail.com>
+Date:   Thu Apr 4 22:50:11 2024 -0400
+
+    Fix searching for flag-like strings, e.g., search_file "--flag"
+
+[33mcommit 4f7b771e56310ed6120b4cbc5e4d90fc67c2a34d[m
+Merge: 91f78d2 ed29dda
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Thu Apr 4 22:22:39 2024 -0400
+
+    Merge pull request #35 from princeton-nlp/open-pr-repo
+    
+    Feat: Open PR to repo
+
+[33mcommit ed29dda9a40ade5857e7ce3bd2fd54ef27d4cc65[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 22:14:39 2024 -0400
+
+    Remove type hint to avoid flake8 false positive
+
+[33mcommit 38e22a340d550742d255843b17310ad98f32ef87[m
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Thu Apr 4 21:52:02 2024 -0400
+
+    Update run.py
+
+[33mcommit 618d0b1118072a383df2d5cb40f57ba5dae81fa4[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 18:26:33 2024 -0400
+
+    Only allow overriding skip_if_commits_reference_issue on your own repo
+
+[33mcommit d808b00fd04ffe2ad6442ef85da4dd59f3981a77[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 14:29:21 2024 -0400
+
+    Add trajectory to PR
+
+[33mcommit ac1aadb3e6bcec66aae0009f6ac872ef52779e76[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 13:47:58 2024 -0400
+
+    Remove left-over prototyping code
+
+[33mcommit 1973d7859f4a7a81e5439cd73ef26a47b73704de[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 13:47:25 2024 -0400
+
+    Allow to specify separate URL to push to a fork
+
+[33mcommit 0c70263bcd2f7c4895feb45e2dfaaf18fcaef43e[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 13:03:02 2024 -0400
+
+    Refactor open-PR config and add override to skip if referenced
+
+[33mcommit 58c9476945af0f43e816f0b6a1a56f23f77b6e6b[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 12:48:36 2024 -0400
+
+    Skip PR creation if there are associated commits
+
+[33mcommit c61f0c9b8cd29abf062771f008fc4da39dca741b[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 12:26:01 2024 -0400
+
+    Remove debug messages; print PR URL; open PR as draft
+
+[33mcommit ce10810257f055ae93043ab5a1efcd99eee43e90[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 11:59:43 2024 -0400
+
+    Refactor: Move open PR code to env
+
+[33mcommit 5fa2d6bd7613c9b44548d2e87320839907f42230[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 3 23:15:32 2024 -0400
+
+    More conditions to open PR; better commit msg; refactor
+
+[33mcommit dd807f81e35f8724a6874844cd857abf50a76d53[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 3 20:23:36 2024 -0400
+
+    Open PR to repository
+
+[33mcommit 91f78d2a5c9cc1d7e771e34a80f2c6ee7ba2f014[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 20:58:35 2024 -0400
+
+    Add very basic pre-commit config (#62)
+
+[33mcommit 998cd709818c51639aa1446aa674486ad514bcd9[m
+Author: Shunyu Yao <shunyuyao.cs@gmail.com>
+Date:   Thu Apr 4 16:34:55 2024 -0700
+
+    Update README.md
+
+[33mcommit 68760dcaf66c4ec7937f23e2780af11ab8ba99d7[m
+Author: Chandrahas77 <52702137+Chandrahas77@users.noreply.github.com>
+Date:   Thu Apr 4 15:48:54 2024 -0400
+
+    fixed typo in config/README (#55)
+
+[33mcommit 163a55b35bc4c5a4de094df93762056a8c9e0e77[m
+Author: Montague Moran <montaguemoran+github@improbable.io>
+Date:   Thu Apr 4 20:06:45 2024 +0100
+
+    feat(models): natively support claude haiku (#9)
+
+[33mcommit 3d8a6c44f16f190735c774676fea80315cd84da5[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 12:21:59 2024 -0400
+
+    Handle with missing prompt_eval_count in Ollama (#49)
+    
+    Closes #44
+
+[33mcommit 55c21923edcf42e7a62557a625bf4ebb0613be9f[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 12:13:52 2024 -0400
+
+    config_file is a required arg in run_replay.sh (#48)
+    
+    Fixes #46
+
+[33mcommit 2da662bb178523d0a514a6d4542ce60877afdb1d[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Thu Apr 4 12:07:26 2024 -0400
+
+    Increase portability of setup.sh; abort on failure
+    
+    In reference to #42
+
+[33mcommit bc0308b57b21f1e7db4f04512a0feb361d5fd9cf[m
+Author: Ikko Eltociear Ashimine <eltociear@gmail.com>
+Date:   Fri Apr 5 00:34:40 2024 +0900
+
+    Fix typo omitted (#45)
+    
+    ommitted -> omitted
+
+[33mcommit 79038832dfda12e29e1a4ab19d3ee3c8f86e2b9d[m
+Author: Glenn 'devalias' Grant <glenn@devalias.net>
+Date:   Thu Apr 4 12:32:15 2024 +1100
+
+    Doc: add TOGETHER_API_KEY to keys.cfg section of README (#34)
+    
+    I noticed there is also a `TOGETHER_API_KEY` key that can be set in `keys.cfg`, but it wasn't mentioned in the README, so wanted to add it:
+    
+    https://github.com/princeton-nlp/SWE-agent/blob/6c9ebf0ea8a263806b276da7ba3b1eda1f4a9475/sweagent/agent/models.py#L509-L511
+
+[33mcommit 6c9ebf0ea8a263806b276da7ba3b1eda1f4a9475[m
+Author: Montague Moran <montaguemoran+github@improbable.io>
+Date:   Wed Apr 3 23:55:03 2024 +0100
+
+    chore: remove gnureadline dependency (#12)
+
+[33mcommit 00b291fd0ceffc29b4894c520402a151c7457858[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 3 18:45:57 2024 -0400
+
+    More helpful error message if docker is not running (#33)
+    
+    See #20
+
+[33mcommit 1adc4b3a287303fbd5259fb9d21ce6e06c89a817[m
+Author: Kilian Lieret <kilian.lieret@posteo.de>
+Date:   Wed Apr 3 18:45:28 2024 -0400
+
+    Fix unbound variable in error handling (#32)
+
+[33mcommit 4e77b22585354129dac4b72d4571de0de2036955[m
+Author: Tyler Coyner <11138451+tcoyze@users.noreply.github.com>
+Date:   Wed Apr 3 15:19:36 2024 -0700
+
+    fix: allow token from keys.cfg to get passed to ghapi (#31)
+
+[33mcommit c450445e3aa87ec5c74741870c96c7fc61ad4af0[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Wed Apr 3 17:15:58 2024 -0400
+
+    Add correspondence
+
+[33mcommit c7725b95c8fb65007c8cc23389b4214f1104ce41[m
+Author: Ikko Eltociear Ashimine <eltociear@gmail.com>
+Date:   Thu Apr 4 06:02:34 2024 +0900
+
+    Typo fix readme (#19)
+    
+    immensly -> immensely
+
+[33mcommit c175d1048719f98be1aca22a7498edb6637b716e[m
+Author: Farouq Aldori <farouqaldori@hotmail.com>
+Date:   Wed Apr 3 23:01:12 2024 +0200
+
+    Fix broken links in readme (#6)
+
+[33mcommit 760d810ad623889b9357b25d6da592b9f2fea857[m
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Wed Apr 3 09:34:09 2024 -0400
+
+    Update README.md
+
+[33mcommit 542c9fdfbb2c7d72ce8dfc5a83e39122602a37c9[m
+Author: Ofir Press <ofirp@cs.washington.edu>
+Date:   Wed Apr 3 02:20:21 2024 -0400
+
+    Update README.md
+    
+    Added link to GitHub token explanation
+
+[33mcommit 9e4381dfed2a27dcf066bbf7876875aa270b7905[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Tue Apr 2 18:27:19 2024 -0400
+
+    Fix "idented" typo
+
+[33mcommit 7439b59b2e19facb9e03cbc0f7d6723c18932951[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Tue Apr 2 17:44:02 2024 -0400
+
+    Fix setup.py type
+
+[33mcommit 67fee842cd984a78b1e94f7be11705c3c351f0b4[m
+Author: Carlos! <cjsaltlake@gmail.com>
+Date:   Tue Apr 2 17:15:51 2024 +0000
+
+    Add support for ollama models
+
+[33mcommit 7221bdcec3e6f161f1a6a1b70ec60de8f826c4cd[m
+Author: carlose <cjsaltlake@gmail.com>
+Date:   Tue Apr 2 13:08:57 2024 -0400
+
+    Add demonstration trajectories
+
+[33mcommit f5fabe42b2928f83e9cee9422098e99c8ed601d3[m
+Author: carlose <cjsaltlake@gmail.com>
+Date:   Tue Apr 2 12:05:57 2024 -0400
+
+    Update make_demos README
+
+[33mcommit d27f2b6a3b1fb4ea9447d4ed9524a54ffd87b0bc[m
+Author: carlose <cjsaltlake@gmail.com>
+Date:   Tue Apr 2 12:05:41 2024 -0400
+
+    Update make_demos README
+
+[33mcommit 4aa23c405994c4110dd2e68e193f0273472ef859[m
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Tue Apr 2 10:36:30 2024 -0400
+
+    Update README.md
+
+[33mcommit 71f28c1bff7f0f2209cced25e7ea6e85bdb03080[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Tue Apr 2 09:43:48 2024 -0400
+
+    Fix website link
+
+[33mcommit 0227f3e57ad47a46cc3655d570c6851de74372eb[m
+Author: John Yang <byjohnyang@gmail.com>
+Date:   Tue Apr 2 09:37:17 2024 -0400
+
+    Add results + preview image
+
+[33mcommit 5b143857cb7af8b22fd421a103429f76f5259f08[m
+Author: Carlos E. Jimenez <carlosejimenez@protonmail.com>
+Date:   Tue Apr 2 04:57:35 2024 -0400
+
+    init

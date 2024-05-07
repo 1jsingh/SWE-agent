@@ -48,8 +48,6 @@ instance_template: |-
   When you're satisfied with all of the changes you've made, you can submit your changes to the code base by simply running the submit command.
   Note however that you cannot use any interactive session commands (e.g. python, vim) in this environment, but you can write scripts and run them. E.g. you can write a python script and then run it with `python <script_name>.py`.
 
-  NOTE ABOUT THE EDIT COMMAND: Indentation really matters! When editing a file, make sure to insert appropriate indentation before each line! 
-
   IMPORTANT TIPS:
   1. When you think you've fixed the bug, re-run the bug reproduction script to make sure that the bug has indeed been fixed.
      
@@ -78,6 +76,9 @@ instance_template: |-
 
   You have been handed over the terminal session now from the main agent. You can start solving the subtask now.
   The currently open file and working directory are shown below.
+
+  NOTE ABOUT THE EDIT COMMAND: Indentation really matters! When editing a file, make sure to insert appropriate indentation before each line! 
+
 
   (Open file: {open_file})
   (Current directory: {working_dir})

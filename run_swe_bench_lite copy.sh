@@ -38,7 +38,7 @@ else
     gold_patch_results_path="$GOLD_PATCH_TEST"
 fi
 
-use_gold_patch_filter=false
+use_gold_patch_filter=true
 ####################################################################################################
 
 # Number of tasks to run the evaluation on (default is -1, which means all tasks)
@@ -153,10 +153,6 @@ fi
 ####################################################################################################
 
 if [ "$run_eval" = true ]; then
-    # print running evaluation with nice dividers
-    echo "########################################################################################"
-    echo "running evaluation ..."
-    echo "########################################################################################"
     # The first positional argument ... compute run_path based on the run script
     dataset_name_or_path="princeton-nlp/SWE-bench_Lite"
     data_stem=$(basename $dataset_name_or_path)
@@ -180,12 +176,6 @@ if [ "$run_eval" = true ]; then
     # testbed_dir="${4:-testbed}"
     testbed_dir="${4:-/testbed}" # place the testbed dir in the root to make the path length smaller
     # If results or testbed directories do not exist, create them
-
-    # create the results dir in the folder corresponding to the predictions all_preds.jsonl file
-    results_dir=$(dirname "$predictions_path")/eval_logs
-    # get absolute path for the results dir
-    results_dir=$(realpath "$results_dir")
-
     if [ ! -d "$results_dir" ]; then
         mkdir -p "$results_dir"
         echo "Created results directory at $results_dir"
@@ -216,11 +206,14 @@ if [ "$run_eval" = true ]; then
                 --timeout 900 \
                 --verbose
     else
-        python evaluation_docker/run_evaluation.py \
+        python evaluation/evaluation.py \
             --predictions_path "$predictions_path" \
             --swe_bench_tasks "$dataset_name_or_path" \
             --log_dir "$results_dir" \
+            --testbed "$testbed_dir" \
             --timeout 900 \
-            --skip_existing
+            --num_processes 4 \
+            --verbose 
+            # --skip_existing
     fi
 fi

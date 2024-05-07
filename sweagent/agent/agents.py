@@ -1005,8 +1005,8 @@ class Agent:
             observations = list()
             if 'subtask_execute' in action:
                 assert self.hepllm_levels > 1, "Heirarchial levels must be greater than 1 for subtask delegation"
-                agent_name, subtask_instruction = self.parse_subtask_execute(action)
-                sub_agent_output = self.sub_agent_execute_stateless(agent_name, subtask_instruction, env, observation, setup_args)
+                agent_name, task_type, subtask_instruction = self.parse_subtask_execute(action)
+                sub_agent_output = self.sub_agent_execute_stateless(agent_name, task_type, subtask_instruction, env, observation, setup_args)
                 observations.append(sub_agent_output)
             elif 'finish_subtask_and_report_to_main_agent' in action:
                 subtask_report = self.parse_finish_subtask_and_report_to_main_agent(action)
@@ -1052,7 +1052,7 @@ class Agent:
             return subtask_report
         return trajectory[-1][return_type]
 
-    def sub_agent_execute_stateless(self, agent_name, subtask_instruction, env, previous_observation=None, setup_args=None):
+    def sub_agent_execute_stateless(self, agent_name, task_type, subtask_instruction, env, previous_observation=None, setup_args=None):
         """
         Execute the sub-agent without maintaining state.
 
@@ -1069,9 +1069,20 @@ class Agent:
         if subagent_hepllm_levels == 1:
             subagent_config_file = "config/hepllm/default-v5-leaf-level.yaml"
         else:
-            subagent_config_file = "config/hepllm/default-v2-root-level.yaml"     
+            subagent_config_file = "config/hepllm/default-v2-root-level.yaml"   
+
+        if 'normal' in task_type:
+            model = self.args.model
+        else:
+            model = ModelArguments(
+                model_name=self.args.model.model_name,#"gpt-3.5-turbo",
+                total_cost_limit=0.0,
+                per_instance_cost_limit=self.args.model.per_instance_cost_limit,
+                temperature=self.args.model.temperature,
+                top_p=self.args.model.top_p,
+            )
         agent_args = AgentArguments(
-            model=self.args.model,
+            model=model,
             config_file=subagent_config_file,
             use_hepllm=self.use_hepllm,
             hepllm_levels=subagent_hepllm_levels)
@@ -1085,7 +1096,8 @@ class Agent:
         sub_setup_args["subtask_instructions"] = subtask_instruction
 
         # provide main agent history to the sub-agent for reference purposes
-        main_agent_history = self.prepare_main_agent_history()
+        use_local_history = True if ("normal" in task_type) else False
+        main_agent_history = self.prepare_main_agent_history(use_local_history=use_local_history)
         sub_setup_args["main_agent_history"] = main_agent_history
 
         # synchronize the env and current state
@@ -1110,7 +1122,9 @@ class Agent:
         
         # NOTE: experimental add the sub-agent history to the main agent history
         # self.history += sub_agent.history
-        self.history += sub_agent.filter_history(sub_agent.history)
+        if ("normal" in task_type):
+            self.history += sub_agent.filter_history(sub_agent.history)
+        # self.history += sub_agent.filter_history(sub_agent.history)
 
         # put things back for env, args, etc for the main agent
         # self.set_environment_vars(env, env_vars)
@@ -1161,7 +1175,7 @@ class Agent:
 
         return filtered_history
     
-    def prepare_main_agent_history(self):
+    def prepare_main_agent_history(self, use_local_history = False):
         """
         Prepare the main agent history for the sub-agent.
         """
@@ -1174,7 +1188,6 @@ class Agent:
         """
 
         # get the main agent history (using self.history will histories of all subagents as well)
-        use_local_history = False
         history = self.local_history if use_local_history else self.history
         history = [entry for entry in history if entry["role"] != "system" and ('is_demo' not in entry or not entry['is_demo'])]
         # history = [entry for entry in history if entry["role"] != "system" and entry['is_demo'] == False]
@@ -1210,14 +1223,14 @@ class Agent:
         
         # The first line should contain the subtask command and the agent name
         first_line = lines[0].strip()
-        # Assuming the format 'subtask_execute <agent_name>'
-        _, agent_name = first_line.split(' ', 1)
+        # Assuming the format 'subtask_execute <agent_name> <task_type>'
+        _, agent_name, task_type = first_line.split(' ')
         
         # The remaining part of the action block is the subtask instruction
         # It starts from the next line till the line before 'end_subtask'
         subtask_instruction = '\n'.join(line.strip() for line in lines[1:-1]).strip()
         
-        return (agent_name, subtask_instruction)
+        return (agent_name, task_type, subtask_instruction)
 
     def parse_finish_subtask_and_report_to_main_agent(self, action):
         """

@@ -132,7 +132,7 @@ def load_content(file_name, gold_patches, test_patches):
     if results_file.exists():
         with open(results_file) as infile:
             results = json.load(infile)
-
+    print (results_file, results)
     scorecards_file = Path(file_name).parent / "scorecards.json"
     scorecards = None
     if scorecards_file.exists():

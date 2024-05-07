@@ -39,12 +39,10 @@ instance_template: |-
   When you're satisfied with all of the changes you've made, you can submit your changes to the code base by simply running the submit command.
   Note however that you cannot use any interactive session commands (e.g. python, vim) in this environment, but you can write scripts and run them. E.g. you can write a python script and then run it with `python <script_name>.py`.
 
-  NOTE ABOUT THE EDIT COMMAND: Indentation really matters! When editing a file, make sure to insert appropriate indentation before each line! 
-
   IMPORTANT TIPS:
   1a. IMPORTANT: First step without fail must always be to check the files in the main repo. You can do this by running the `ls -F` action. This will show you all the files in the current directory and be useful for making future decisions.
   
-  1b. IMPORTANT: Second, use a subagent (must use subagent) to read and extract relevant information from the README or documentation to understand the basic usage of the github repo or library, especially those which are relevant to the issue.
+  1b. IMPORTANT: Second, use a subagent (must use subagent) to read the README or documentation to understand the basic usage of the github repo or library.
 
   2. Once done with above, we recommend to start by trying to replicate the bug that the issues discusses. 
      If the issue includes code for reproducing the bug, we recommend that you re-implement that in your environment, and run it to make sure you can reproduce the bug.
@@ -71,6 +69,9 @@ instance_template: |-
   9. You should work in high-level action space (leveraging subagents), and use subagents for low-entropy subtasks.
 
   10. Do not redo the effort of other agents (e.g. reproduction script). If you see that another agent has already done something, you should not redo it. You should build on top of it.
+
+  NOTE ABOUT THE EDIT COMMAND: Indentation really matters! When editing a file, make sure to insert appropriate indentation before each line! 
+  If you try an edit and it fails once, just pass it to a subagent to make the edit. They will handle the syntax and indentation for you.
 
   (Open file: {open_file})
   (Current directory: {working_dir})
@@ -133,7 +134,7 @@ env_variables:
   SEARCH_FILES: ()
   SEARCH_INDEX: 0
 command_files:
-- config/commands/subtask_execute.sh
+- config/commands/subtask_execute_v2.sh
 - config/commands/defaults-submit-no-addfile.sh
 - config/commands/search.sh
 - config/commands/edit_linting.sh

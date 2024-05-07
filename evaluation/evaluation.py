@@ -22,6 +22,24 @@ from swebench.harness.constants import (
 from unidiff import PatchSet
 import copy
 
+import json
+import time
+
+def load_json_file(filepath, max_attempts=5, delay=2):
+    """Attempt to load a JSON file up to max_attempts with a delay between tries."""
+    for attempt in range(max_attempts):
+        try:
+            with open(filepath, "r") as file:
+                return json.load(file)
+        except json.JSONDecodeError as e:
+            print(f"Failed to load JSON file on attempt {attempt+1}: {e}")
+            time.sleep(delay)  # Wait before trying again
+        except FileNotFoundError as e:
+            print(f"File not found: {e}")
+            return None  # or raise an exception, depending on how critical this is
+    raise Exception("Maximum attempts reached, JSON file could not be loaded")
+
+
 def main(predictions_path, log_dir, swe_bench_tasks, testbed, skip_existing, timeout, verbose, conda_link, log_suffix, num_processes):
     # Check if paths exist
     if not os.path.exists(predictions_path):
@@ -86,7 +104,8 @@ def main(predictions_path, log_dir, swe_bench_tasks, testbed, skip_existing, tim
         # Add trajectory statistics if traj_path exists
         traj_path = os.path.join(directory, f"{p[KEY_INSTANCE_ID]}.traj")
         if os.path.exists(traj_path):
-            traj_data = json.load(open(traj_path, "r"))
+            # traj_data = json.load(open(traj_path, "r"))
+            traj_data = load_json_file(traj_path)
             scorecard["stats"]["traj_num_steps"] = len(traj_data["trajectory"])
             scorecard["stats"]["traj_action_dist"] = dict(
                 Counter(

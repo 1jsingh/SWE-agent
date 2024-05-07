@@ -221,6 +221,8 @@ class OpenAIModel(BaseModel):
         "gpt3-legacy": "gpt-3.5-turbo-16k-0613",
         "gpt4": "gpt-4-1106-preview",
         "gpt-4": "gpt-4-1106-preview",
+        "gpt-35-turbo": "gpt-3.5-turbo-1106",
+        "gpt-3.5-turbo": "gpt-3.5-turbo-1106",
         "gpt-4-turbo": "gpt-4-1106-preview",
         "gpt4-legacy": "gpt-4-0613",
         "gpt4-0125": "gpt-4-0125-preview",
@@ -234,7 +236,13 @@ class OpenAIModel(BaseModel):
         cfg = config.Config(os.path.join(os.getcwd(), "keys.cfg"))
         if self.args.model_name.startswith("azure"):
             logger.info("Using Azure OpenAI API ... model: %s", self.api_model)
-            self.api_model = cfg["AZURE_OPENAI_DEPLOYMENT"]
+            # self.api_model = cfg["AZURE_OPENAI_DEPLOYMENT"]
+            if 'gpt4' in args.model_name:
+                self.api_model = 'gpt-4-turbo'
+                logger.info("Using Azure OpenAI API ... model: %s", self.api_model)
+            else:
+                self.api_model = 'gpt-35-turbo'
+                logger.info("Using Azure OpenAI API ... model: %s", self.api_model)
             self.client = AzureOpenAI(api_key=cfg["AZURE_OPENAI_API_KEY"], azure_endpoint=cfg["AZURE_OPENAI_ENDPOINT"], api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-02-01"))
         else:
             api_base_url: Optional[str] = cfg.get("OPENAI_API_BASE_URL", None)
