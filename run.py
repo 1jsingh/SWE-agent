@@ -9,6 +9,7 @@ import rich.markdown
 import rich.panel
 import rich.markdown
 import yaml
+import numpy as np
 
 from dataclasses import dataclass
 from getpass import getuser
@@ -83,6 +84,7 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
     exp_subdir: str = "latest" # NOTE: used for subdir in trajectories directory
     filter_gold_patch_positives: bool = False # NOTE: used for debug
     gold_patch_results_file: str = "gold_patch_results.json" # NOTE: used for debug
+    num_processes: int = 1 # NOTE: used for multiprocessing
 
     @property
     def run_name(self):
@@ -112,7 +114,9 @@ def save_gold_patch(index, env, traj_dir):
     save_patch(traj_dir, env.data[index]["instance_id"], info)
 
 
-def main(args: ScriptArguments):
+def main(args: ScriptArguments, index=None, num_processes=1):
+    if num_processes > 1:
+        logger.info(f"🚀 Starting process {index} ...")
     logger.info(f"📙 Arguments: {args.dumps_yaml()}")
     agent = Agent("primary", args.agent)
     env = SWEEnv(args.environment)
@@ -121,11 +125,22 @@ def main(args: ScriptArguments):
     traj_dir = Path("trajectories") / Path(args.exp_subdir) / args.run_name
     traj_dir.mkdir(parents=True, exist_ok=True)
 
-    save_arguments(traj_dir, args)
+    if num_processes == 1 or index == 0:
+        save_arguments(traj_dir, args)
+
     # NOTE: num_tasks is the number of tasks to run, if -1, run all tasks
     num_tasks = args.num_tasks if args.num_tasks > 0 else len(env.data)
     num_tasks = min(num_tasks, len(env.data) - args.start_index)
     assert num_tasks > 0, f"num_tasks={num_tasks} must be positive"
+    
+    if num_processes == 1:
+        start_index_process = 0 
+        num_tasks_process = num_tasks
+    else:
+        num_tasks_process = int(np.ceil(num_tasks / num_processes))
+        start_index_process = args.start_index + index * num_tasks_process
+        num_tasks_process = min(num_tasks_process, num_tasks - index * num_tasks_process)
+        logger.info(f"🚀 Process {index} will run {num_tasks_process} tasks {start_index_process} to {start_index_process + num_tasks_process}")
 
     # filter gold patch positives
     if args.filter_gold_patch_positives:
@@ -146,7 +161,7 @@ def main(args: ScriptArguments):
     #         p.map(func, range(args.start_index, args.start_index + num_tasks))
     #     return
 
-    for index in range(args.start_index, args.start_index + num_tasks):
+    for index in range(args.start_index + start_index_process, args.start_index + start_index_process + num_tasks_process):
         # index += args.start_index # TODO: remove this line
         try:
             # NOTE: if use_gold_patches is set to True, the agent will use the gold patches as the submission
@@ -231,7 +246,6 @@ def main(args: ScriptArguments):
                     return_type="info_trajectory",
                 )
 
-                
             save_predictions(traj_dir, instance_id, info)
             save_patch(traj_dir, instance_id, info)
             if args.actions.open_pr and should_open_pr(args, info, token=env._github_token):
@@ -248,6 +262,13 @@ def main(args: ScriptArguments):
                 raise e
             env.reset_container()
             continue
+    
+    # Close the environment
+    if num_processes >1:
+        env.close()
+        logger.info("🏁 Finished task " + str(index))
+
+
 
 
 def should_open_pr(args: ScriptArguments, info: Dict[str, Any], *, token: str="") -> bool:
@@ -334,8 +355,11 @@ def should_skip(args: ScriptArguments, traj_dir: Path, instance_id: str) -> bool
     return False
 
 
-def save_predictions(traj_dir: Path, instance_id: str, info):
-    output_file = traj_dir / "all_preds.jsonl"
+def save_predictions(traj_dir: Path, instance_id: str, info, index=None):
+    if index is not None:
+        output_file = traj_dir / f"all_preds_{index}.jsonl"
+    else:
+        output_file = traj_dir / "all_preds.jsonl"
     model_patch = info["submission"] if "submission" in info else None
     datum = {
         KEY_MODEL: Path(traj_dir).name,
@@ -345,8 +369,6 @@ def save_predictions(traj_dir: Path, instance_id: str, info):
     with open(output_file, "a+") as fp:
         print(json.dumps(datum), file=fp, flush=True)
     logger.info(f"Saved predictions to {output_file}")
-
-
 
 
 def save_patch(traj_dir: Path, instance_id: str, info) -> Optional[Path]:
@@ -402,7 +424,8 @@ def get_args(args=None) -> ScriptArguments:
         suffix="",
         num_tasks=-1,
         start_index=0, # NOTE: used for debug
-        use_gold_patches=False, # NOTE: used for debug
+        use_gold_patches=False, # NOTE: used for debug,
+        num_processes=1,
         exp_subdir="hepllm-v0.3",
         environment=EnvironmentArguments(
             image_name="sweagent/swe-agent:latest",
@@ -442,7 +465,31 @@ def get_args(args=None) -> ScriptArguments:
 
     return parse(ScriptArguments, default=defaults, add_config_path_arg=False, args=args)
 
+def save_combined_predictions(args):
+    """
+    combines all the predictions files into one
+    """
+    all_preds_files = list(Path("trajectories") / Path(args.exp_subdir) / args.run_name).glob("all_preds_*.jsonl")
+    all_preds_file = Path("trajectories") / Path(args.exp_subdir) / args.run_name / "all_preds.jsonl"
+    # combine all the files into one
+    with open(all_preds_file, "w") as outfile:
+        for file in all_preds_files:
+            with open(file, "r") as infile:
+                for line in infile:
+                    outfile.write(line)
 
 if __name__ == "__main__":
     args = get_args()
-    main(args)
+
+    # check num processes <= 4
+    assert args.num_processes <= 4, "num_processes must be less than or equal to 4"
+
+    if args.num_processes == 1:
+        main(args)
+    else:
+        with Pool(args.num_processes) as p:
+            # note main (args, index, num_processes) is the function to be run in parallel
+            p.starmap(main, [(args, i, args.num_processes) for i in range(args.num_processes)])
+
+        # save the predictions in a joint all_preds file
+        save_combined_predictions(args)

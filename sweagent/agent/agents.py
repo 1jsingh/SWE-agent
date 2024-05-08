@@ -1199,7 +1199,8 @@ class Agent:
 
         # instead of joining the content, use a more structured way to present the history
         # as in if the entry is by the assistant than it starts with "ACTION: " and if by the user than "OBSERVATION: "
-        history_message = '\n'.join([f"ACTION: {entry['content']}" if entry["role"] == "assistant" else f"OBSERVATION: {entry['content']}" for entry in history])
+        separator_string = "\n ------------------------------------ \n"
+        history_message = separator_string.join([f"ACTION:\n{entry['content']}" if entry["role"] == "assistant" else f"OBSERVATION:\n{entry['content']}" for entry in history])
         # history_message = '\n'.join([entry["content"] for entry in main_agent_history])
 
         # prepare the main agent history

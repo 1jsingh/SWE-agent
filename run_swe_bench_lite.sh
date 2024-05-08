@@ -17,7 +17,7 @@ model_name="azure:gpt4"
 ####################################################################################################
 # experiment configurations
 ####################################################################################################
-per_instance_cost_limit="10.0"
+per_instance_cost_limit="4.0"
 use_hepllm=false
 skip_existing=false
 
@@ -25,6 +25,7 @@ skip_existing=false
 split="dev"
 # split="test"
 
+num_processes=4
 
 ####################################################################################################
 # gold patch result files
@@ -42,8 +43,8 @@ use_gold_patch_filter=false
 ####################################################################################################
 
 # Number of tasks to run the evaluation on (default is -1, which means all tasks)
-num_tasks=1
-start_index=17
+num_tasks=-1
+start_index=0
 if [ "$num_tasks" -eq -1 ]; then
     num_tasks_text="all"
 else
@@ -76,8 +77,8 @@ if [ "$use_hepllm" = true ]; then
     # config_file="./config/hepllm/default-v6-root-level.yaml"
     # config_file="./config/hepllm/default-v4-root-level.yaml"
 
-    # suffix="${split}_hepllm-lv2-r7-l5__indv-run-1"
-    suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r7-l5__indv-run-1"
+    suffix="${split}_hepllm-lv2-r7-l5__full-mprun-1"
+    # suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r7-l5__indv-run-1"
 fi
 
 # experiment suffix
@@ -147,6 +148,7 @@ if [ "$run_inference" = true ]; then
             --exp_subdir="$exp_subdir" \
             --filter_gold_patch_positives="$use_gold_patch_filter" \
             --gold_patch_results_file="$gold_patch_results_path" \
+            --num_processes="$num_processes" \
             --skip_existing="$skip_existing"
     fi
 fi

@@ -9,6 +9,7 @@ import json
 from collections import Counter
 from unidiff import PatchSet
 from rich import print
+import time
 
 from swebench import (
     get_eval_report,

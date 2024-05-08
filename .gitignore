@@ -190,3 +190,5 @@ trajectories/*
 trajectories*/*
 
 .vscode/**
+
+*princeton-nlp_SWE-bench.json*
