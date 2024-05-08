@@ -1010,7 +1010,7 @@ class Agent:
                 observations.append(sub_agent_output)
             elif 'finish_subtask_and_report_to_main_agent' in action:
                 subtask_report = self.parse_finish_subtask_and_report_to_main_agent(action)
-                return subtask_report
+                return subtask_report, self.get_environment_vars(env)
             else:
                 run_action = self._guard_multiline_input(action)
                 for sub_action in self.split_actions(run_action):
@@ -1049,7 +1049,7 @@ class Agent:
             return info, trajectory
         if return_type == "subtask_report":
             subtask_report = "SUBTASK REPORT: Finishing subtask and need to submit due to exit cost"
-            return subtask_report
+            return subtask_report, self.get_environment_vars(env)
         return trajectory[-1][return_type]
 
     def sub_agent_execute_stateless(self, agent_name, task_type, subtask_instruction, env, previous_observation=None, setup_args=None):
@@ -1112,13 +1112,13 @@ class Agent:
             obs = None
 
         # run the sub-agent --> output is the sub-agent report
-        sub_agent_report = sub_agent.run_heirarchial(
-                                    sub_setup_args,
-                                    env,
-                                    observation=obs,
-                                    return_type="subtask_report",
-                                    init_model_stats=self.model.stats,
-                                )
+        sub_agent_report, sub_agent_env_vars = sub_agent.run_heirarchial(
+                                                    sub_setup_args,
+                                                    env,
+                                                    observation=obs,
+                                                    return_type="subtask_report",
+                                                    init_model_stats=self.model.stats,
+                                                )
         
         # NOTE: experimental add the sub-agent history to the main agent history
         # self.history += sub_agent.history
@@ -1127,6 +1127,8 @@ class Agent:
         # self.history += sub_agent.filter_history(sub_agent.history)
 
         # put things back for env, args, etc for the main agent
+        self.set_environment_vars(env, sub_agent_env_vars)
+        
         # self.set_environment_vars(env, env_vars)
         # env.communicate(f"cd {cwd}")
         self.model.stats.replace(sub_agent.model.stats)
@@ -1224,8 +1226,14 @@ class Agent:
         # The first line should contain the subtask command and the agent name
         first_line = lines[0].strip()
         # Assuming the format 'subtask_execute <agent_name> <task_type>'
-        _, agent_name, task_type = first_line.split(' ')
-        
+        # if there are 3 elements in the split, then the task_type is also present
+        # if there are 2 then the task_type is normal
+        if len(first_line.split(' ')) == 2:
+            _, agent_name = first_line.split(' ',1)
+            task_type = "normal" #NOTE: temporary fix to make all agents normal
+        else:
+            _, agent_name, task_type = first_line.split(' ')
+
         # The remaining part of the action block is the subtask instruction
         # It starts from the next line till the line before 'end_subtask'
         subtask_instruction = '\n'.join(line.strip() for line in lines[1:-1]).strip()

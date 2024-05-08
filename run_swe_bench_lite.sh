@@ -23,7 +23,7 @@ skip_existing=false
 
 # data split
 split="dev"
-split="test"
+# split="test"
 
 
 ####################################################################################################
@@ -43,7 +43,7 @@ use_gold_patch_filter=false
 
 # Number of tasks to run the evaluation on (default is -1, which means all tasks)
 num_tasks=1
-start_index=86
+start_index=17
 if [ "$num_tasks" -eq -1 ]; then
     num_tasks_text="all"
 else
@@ -68,14 +68,17 @@ fi
 # hep-llm configuration file
 # config_file="./config/default_hepllm_v0.1.yaml"
 
-config_file="./config/hepllm/default-v7-root-level.yaml"
-# config_file="./config/hepllm/default-v5-root-level.yaml"
-# config_file="./config/hepllm/default-v6-root-level.yaml"
-
 use_hepllm=true
-suffix="${split}_hepllm-lv2-r7-l5__indv-run-5"
 
-# suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r5-l5__testrun_3"
+if [ "$use_hepllm" = true ]; then
+    config_file="./config/hepllm/default-v7-root-level.yaml"
+    # config_file="./config/hepllm/default-v5-root-level.yaml"
+    # config_file="./config/hepllm/default-v6-root-level.yaml"
+    # config_file="./config/hepllm/default-v4-root-level.yaml"
+
+    # suffix="${split}_hepllm-lv2-r7-l5__indv-run-1"
+    suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r7-l5__indv-run-1"
+fi
 
 # experiment suffix
 # suffix="state-react__run_1"
@@ -83,7 +86,7 @@ suffix="${split}_hepllm-lv2-r7-l5__indv-run-5"
 # suffix="${split}_${start_index}_${num_tasks}_baseline__testrun_2"
 
 ####################################################################################################
-exp_subdir="hepllm-v0.3"
+exp_subdir="hepllm-v0.4"
 
 ####################################################################################################
 # use gold patch
@@ -101,7 +104,7 @@ fi
 # sleep for 2 sec to allow saving the logs
 # sleep 2
 
-run_inference=false
+run_inference=true
 # define run_eval to be true if run_inference is false
 if [ "$run_inference" = true ]; then 
     run_eval=false
