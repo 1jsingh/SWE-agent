@@ -539,7 +539,7 @@ class Agent:
             logger.info(f"🤖 MODEL INPUT\n{message}")
         self.history.append({"role": "user", "content": message, "agent": self.name})
 
-        return self.model.query(self.local_history)
+        return self.model.query(self.local_history, use_bfs=not self.is_sub_agent)
 
     def retry_after_format_fail(self, output):
         """Ask the model to correct (without committing to persistent history) after a malformatted model output"""
@@ -552,7 +552,7 @@ class Agent:
             {"role": "assistant", "content": output, "agent": self.name},
             {"role": "user", "content": format_error_template, "agent": self.name},
         ]
-        return self.model.query(temp_history)
+        return self.model.query(temp_history, use_bfs=not self.is_sub_agent)
 
     def retry_after_blocklist_fail(self, output, action):
         """Ask the model to correct (without committing to persistent history) after a disallowed command"""
@@ -566,7 +566,7 @@ class Agent:
             {"role": "assistant", "content": output, "agent": self.name},
             {"role": "user", "content": blocklist_error_message, "agent": self.name},
         ]
-        return self.model.query(temp_history)
+        return self.model.query(temp_history, use_bfs=not self.is_sub_agent)
 
     def should_block_action(self, action):
         """Check if the command should be blocked."""
@@ -950,7 +950,7 @@ class Agent:
             return info, trajectory
         return trajectory[-1][return_type]
 
-
+    
     def run_heirarchial(
         self,
         setup_args: Dict[str, Any],

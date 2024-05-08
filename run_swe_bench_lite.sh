@@ -25,7 +25,7 @@ skip_existing=false
 split="dev"
 # split="test"
 
-num_processes=4
+num_processes=1
 
 ####################################################################################################
 # gold patch result files
@@ -43,8 +43,8 @@ use_gold_patch_filter=false
 ####################################################################################################
 
 # Number of tasks to run the evaluation on (default is -1, which means all tasks)
-num_tasks=-1
-start_index=0
+num_tasks=1
+start_index=5
 if [ "$num_tasks" -eq -1 ]; then
     num_tasks_text="all"
 else
@@ -77,8 +77,8 @@ if [ "$use_hepllm" = true ]; then
     # config_file="./config/hepllm/default-v6-root-level.yaml"
     # config_file="./config/hepllm/default-v4-root-level.yaml"
 
-    suffix="${split}_hepllm-lv2-r7-l5__full-mprun-1"
-    # suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r7-l5__indv-run-1"
+    # suffix="${split}_hepllm-lv2-r7-l5__full-mprun-1"
+    suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r7-l5__indv-run-1"
 fi
 
 # experiment suffix
@@ -87,7 +87,7 @@ fi
 # suffix="${split}_${start_index}_${num_tasks}_baseline__testrun_2"
 
 ####################################################################################################
-exp_subdir="hepllm-v0.4"
+exp_subdir="hepllm-v0.5"
 
 ####################################################################################################
 # use gold patch

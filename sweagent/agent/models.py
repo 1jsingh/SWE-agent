@@ -263,19 +263,41 @@ class OpenAIModel(BaseModel):
             {k: v for k, v in entry.items() if k in ["role", "content"]}
             for entry in history
         ]
-
+    
     @retry(
         wait=wait_random_exponential(min=1, max=15),
         reraise=True,
         stop=stop_after_attempt(3),
         retry=retry_if_not_exception_type((CostLimitExceededError, RuntimeError)),
     )
-    def query(self, history: list[dict[str, str]]) -> str:
+    def query(self, history: list[dict[str, str]], use_bfs=False, bfs_b=3) -> str:
         """
         Query the OpenAI API with the given `history` and return the response.
         """
         try:
             messages = self.history_to_messages(history)
+
+            if use_bfs:
+                # add BFS prompt at the end of the last message
+                bfs_prompt = f"LETS TAKE SOME TIME TO THINK FOR THE NEXT ACTION:\nBefore generating an output, consider {bfs_b} significantly different thought generations (no actions needed) for the next step.\n you be a bit detailed \n\n Finally, decide which action (thought) provides the most promising approach to solve the task as efficiently as possible while still minimizing risk of making mistakes."
+                messages[-1]["content"] += f"\n\n{bfs_prompt}"
+
+                preliminary_response = self.client.chat.completions.create(
+                                                    messages=messages,
+                                                    model=self.api_model,
+                                                    temperature=self.args.temperature,
+                                                    top_p=self.args.top_p,
+                                                )
+                next_action_analysis = preliminary_response.choices[0].message.content
+                logger.info("#############################################")
+                logger.info(next_action_analysis)
+                logger.info("#############################################")
+                messages.append({"role": "assistant", "content": next_action_analysis})
+
+                # actual response generation
+                response_generation_prompt = f"LETS CONTINUE:\nNow, generate the actual (thought/action) response in the standard format."
+                messages.append({"role":"user", "content": response_generation_prompt})    
+
 
             # logger.info("#############################################")
             # logger.info(messages)
