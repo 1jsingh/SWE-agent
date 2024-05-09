@@ -17,7 +17,7 @@ model_name="azure:gpt4"
 ####################################################################################################
 # experiment configurations
 ####################################################################################################
-per_instance_cost_limit="2.0"
+per_instance_cost_limit="4.0"
 use_hepllm=false
 skip_existing=false
 
@@ -44,7 +44,7 @@ use_gold_patch_filter=false
 
 # Number of tasks to run the evaluation on (default is -1, which means all tasks)
 num_tasks=1
-start_index=5
+start_index=6
 if [ "$num_tasks" -eq -1 ]; then
     num_tasks_text="all"
 else
@@ -68,6 +68,10 @@ else
     fi
 fi
 
+####################################################################################################
+# planning args
+####################################################################################################
+use_planning=false
 
 ####################################################################################################
 # default configuration file
@@ -87,13 +91,15 @@ fi
 # hep-llm configuration file
 # config_file="./config/default_hepllm_v0.1.yaml"
 
-use_hepllm=false
+use_hepllm=true
 
 if [ "$use_hepllm" = true ]; then
-    config_file="./config/hepllm/default-v7-root-level.yaml"
+    # config_file="./config/hepllm/default-v4-root-level.yaml"
     # config_file="./config/hepllm/default-v5-root-level.yaml"
     # config_file="./config/hepllm/default-v6-root-level.yaml"
-    # config_file="./config/hepllm/default-v4-root-level.yaml"
+    
+    # config_file="./config/hepllm/default-v7-root-level.yaml"
+    config_file="./config/hepllm/default-v9-root-level.yaml"
 
     # suffix="${split}_hepllm-lv2-r7-l5__full-mprun-1"
     suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r7-l5__indv-run-1"
@@ -169,6 +175,7 @@ if [ "$run_inference" = true ]; then
             --num_processes="$num_processes" \
             --use_dockerized_inference="$use_dockerized_inference" \
             --image_name="$image_name" \
+            --use_planning="$use_planning" \
             --skip_existing="$skip_existing"
     fi
 fi

@@ -189,6 +189,7 @@ class AgentArguments(FlattenedAccess, FrozenSerializable):
     model: ModelArguments = None
     use_hepllm: bool = False # NOTE: Added for HEPLLM
     hepllm_levels: int = 1 # NOTE: Added for HEPLLM
+    use_planning: bool = False # NOTE: Added for Planning
 
     # Policy can only be set via config yaml file from command line
     config_file: Optional[Path] = None
@@ -237,6 +238,9 @@ class Agent:
         self.args = args
         self.is_sub_agent = is_sub_agent
 
+        # NOTE: Added for Planning
+        self.use_bfs = args.use_planning and args.use_hepllm and not self.is_sub_agent
+    
 
     def setup(self, instance_args, init_model_stats=None) -> None:
         """Setup the agent for a new instance.
@@ -539,7 +543,7 @@ class Agent:
             logger.info(f"🤖 MODEL INPUT\n{message}")
         self.history.append({"role": "user", "content": message, "agent": self.name})
 
-        return self.model.query(self.local_history, use_bfs=self.args.use_hepllm and not self.is_sub_agent)
+        return self.model.query(self.local_history, use_bfs=self.use_bfs)
 
     def retry_after_format_fail(self, output):
         """Ask the model to correct (without committing to persistent history) after a malformatted model output"""
@@ -552,7 +556,7 @@ class Agent:
             {"role": "assistant", "content": output, "agent": self.name},
             {"role": "user", "content": format_error_template, "agent": self.name},
         ]
-        return self.model.query(temp_history, use_bfs=self.args.use_hepllm and not self.is_sub_agent)
+        return self.model.query(temp_history, use_bfs=self.use_bfs)
 
     def retry_after_blocklist_fail(self, output, action):
         """Ask the model to correct (without committing to persistent history) after a disallowed command"""
@@ -566,7 +570,7 @@ class Agent:
             {"role": "assistant", "content": output, "agent": self.name},
             {"role": "user", "content": blocklist_error_message, "agent": self.name},
         ]
-        return self.model.query(temp_history, use_bfs=self.args.use_hepllm and not self.is_sub_agent)
+        return self.model.query(temp_history, use_bfs=self.use_bfs)
 
     def should_block_action(self, action):
         """Check if the command should be blocked."""
@@ -1067,9 +1071,9 @@ class Agent:
         # create the sub-agent args and config
         subagent_hepllm_levels = self.hepllm_levels - 1
         if subagent_hepllm_levels == 1:
-            subagent_config_file = "config/hepllm/default-v5-leaf-level.yaml"
+            subagent_config_file = "config/hepllm/default-v7-leaf-level.yaml"
         else:
-            subagent_config_file = "config/hepllm/default-v2-root-level.yaml"   
+            subagent_config_file = "config/hepllm/default-v9-root-level.yaml"   
 
         if 'normal' in task_type:
             model = self.args.model
@@ -1085,7 +1089,8 @@ class Agent:
             model=model,
             config_file=subagent_config_file,
             use_hepllm=self.use_hepllm,
-            hepllm_levels=subagent_hepllm_levels)
+            hepllm_levels=subagent_hepllm_levels,
+            use_planning=self.args.use_planning)
         
         # Instantiate the sub-agent, depending on the root level
         logger.info("🧑‍💻 SUB-AGENT: Instantiating sub-agent - {} ...".format(agent_name))

@@ -74,7 +74,7 @@ class SWEEnv(gym.Env):
 
     name = "swe_main"
 
-    def __init__(self, args: EnvironmentArguments):
+    def __init__(self, args: EnvironmentArguments, use_dockerized_inference: bool = False):
         super().__init__()
         self.args = args
         self.base_commit = None
@@ -120,7 +120,7 @@ class SWEEnv(gym.Env):
         self.clean_multi_line_functions = lambda x: x
 
         # if using dockerized inference copy the swe_entry script to the container
-        if args.use_dockerized_inference:
+        if use_dockerized_inference:
             self.copy_swe_entry_script()
 
     def copy_swe_entry_script(self):

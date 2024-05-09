@@ -124,7 +124,7 @@ def main(args: ScriptArguments, index=None, num_processes=1):
         logger.info(f"🚀 Starting process {index} ...")
     logger.info(f"📙 Arguments: {args.dumps_yaml()}")
     agent = Agent("primary", args.agent)
-    env = SWEEnv(args.environment)
+    env = SWEEnv(args.environment, use_dockerized_inference=args.use_dockerized_inference)
 
     # traj_dir = Path("trajectories") / Path(getuser()) / args.run_name
     traj_dir = Path("trajectories") / Path(args.exp_subdir) / args.run_name
@@ -454,6 +454,7 @@ def get_args(args=None) -> ScriptArguments:
             config_file="config/default.yaml",
             use_hepllm=False,
             hepllm_levels=1,
+            use_planning=False,
         ),
         actions=ActionsArguments(open_pr=False, skip_if_commits_reference_issue=True),
         filter_gold_patch_positives=False,
