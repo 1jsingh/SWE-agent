@@ -119,6 +119,122 @@ class SWEEnv(gym.Env):
         self.idx = 0
         self.clean_multi_line_functions = lambda x: x
 
+        # if using dockerized inference copy the swe_entry script to the container
+        if args.use_dockerized_inference:
+            self.copy_swe_entry_script()
+
+    def copy_swe_entry_script(self):
+        """
+        Copy the swe_entry script to the container
+        """
+        path_to_script = '$HOME/project/qstar/SWE-agent/docker_env_setup/swe_entry.sh'
+        subprocess.run(
+            f"docker cp {path_to_script} {self.container_name}:/swe_util/swe_entry_v2.sh",
+            shell=True
+        )
+        # Set execute permissions on the script within the container
+        self.communicate_with_handling(
+            input="chown root:root /swe_util/swe_entry_v2.sh",
+            error_msg="Failed to set execute permissions on swe_entry script"
+        )
+        logger.info("🌴 Copied swe_entry script to container ...")
+
+
+    def reset_alternative(self, index: int = None, apply_test_patch: bool = False) -> Tuple[str, dict]:
+        """
+        """
+        info = {}
+        info["commit_sha"] = self.commit_sha
+
+        # Get task instance
+        self.idx = index if index is not None else self.idx
+        self.record = self.data[self.idx]
+        self.idx += 1
+
+        # Set query, gold command
+        self.base_commit = self.record["base_commit"]
+        self.query = self.record["problem_statement"]
+        self.reward = None
+
+        # Retrieve instance_id from the environment's data
+        instance_id = self.record['instance_id']
+        logger.info(f"🔰 Resetting to instance {instance_id} at index {index}...")
+        
+        ## Reset Container ##
+        # initial setup
+        logger.info("Setting up environment...")
+        for cmd in [
+            # 'su', # switch to root user
+            'cd /',
+            'source /swe_util/miniconda3/etc/profile.d/conda.sh',
+            'export USER=root',
+            f'export SWE_INSTANCE_ID={instance_id}'
+        ]:
+            self.communicate_with_handling(cmd, error_msg="error with initial setup")
+
+        # run the swe_entry script
+        logger.info("Running swe_entry script...")
+        # Set execute permissions on the script within the container
+        self.communicate_with_handling(
+            input=f"/swe_util/swe_entry_v2.sh",
+            error_msg="Failed to run swe_entry script",
+            timeout_duration=LONG_TIMEOUT
+        )
+
+        # log the contents of the bash profile
+        logger.info("loading environment variables ...")
+        instance_vars = self.communicate('cat ~/.bash_profile')
+        logger.info(f"Instance variables:\n{instance_vars}")
+
+        # load env vars from bash profile
+        self.communicate_with_handling('source ~/.bash_profile',
+                                       error_msg="Failed to source bash profile",
+                                       timeout_duration=LONG_TIMEOUT)
+
+        # navigate to repo path and activate conda env
+        for cmd in [
+            'cd $REPO_PATH',
+            'conda activate $CONDA_ENV_NAME',
+            "echo -n > /root/files_to_edit.txt",
+            "export ROOT=$(pwd -P)",
+        ]:
+            self.communicate_with_handling(
+                input=cmd,
+                error_msg="Failed to navigate to repo root and activate conda env",
+            )
+
+        # Reset environment variables
+        for cmd in [
+            'export CURRENT_FILE=""',
+            "export CURRENT_LINE=0",
+            "export SEARCH_RESULTS=()",
+            "export SEARCH_FILES=()",
+            "export SEARCH_INDEX=0",
+        ]:
+            self.communicate_with_handling(
+                input=cmd,
+                error_msg="Failed to reset environment variables",
+            )
+
+        # Install mypy for linting purposes
+        self.communicate_with_handling(
+            f"pip install flake8",
+            error_msg="Failed to install flake8 (lint library)",
+        )
+            
+        # Apply test patch for oracle setting
+        if apply_test_patch:
+            logger.info("applying test patch ...")
+            path_to_patch = "/opendevin/swe_tasks/test.patch"
+            self.communicate_with_handling(
+                input=f"git apply {path_to_patch}",
+                error_msg="Failed to apply test patch correctly"
+            )
+            os.remove(path_to_patch)
+        
+        # Write any metadata to info if necessary
+        return None, info
+
     def reset(self, index: int = None, apply_test_patch: bool = False) -> Tuple[str, dict]:
         """
         Function to reset container between each task instance.

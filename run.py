@@ -85,6 +85,7 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
     filter_gold_patch_positives: bool = False # NOTE: used for debug
     gold_patch_results_file: str = "gold_patch_results.json" # NOTE: used for debug
     num_processes: int = 1 # NOTE: used for multiprocessing
+    use_dockerized_inference: bool = False # NOTE: used for dockerized inference
 
     @property
     def run_name(self):
@@ -115,6 +116,10 @@ def save_gold_patch(index, env, traj_dir):
 
 
 def main(args: ScriptArguments, index=None, num_processes=1):
+    if args.use_dockerized_inference:
+        assert args.environment.split == "test", "split must be set to test for dockerized inference"
+        assert args.environment.image_name == "ghcr.io/xingyaoww/eval-swe-bench-all:lite-v1.1", "image_name must be set to ghcr.io/xingyaoww/eval-swe-bench-all:lite-v1.1 for dockerized inference"
+
     if num_processes > 1:
         logger.info(f"🚀 Starting process {index} ...")
     logger.info(f"📙 Arguments: {args.dumps_yaml()}")
@@ -191,7 +196,10 @@ def main(args: ScriptArguments, index=None, num_processes=1):
             # NOTE: env.reset() will be mainly doing the cloning of the repo to the docker container
             # as well as cleaning the repo, setting it to base commit (before the issue), option of applying test path for oracle setting
             # and potentially install test env (though not clear if its the same as the base env or the agent has to install it himself)
-            observation, info = env.reset(index)
+            if args.use_dockerized_inference:
+                observation, info = env.reset_alternative(index)
+            else:
+                observation, info = env.reset(index)
             if info is None:
                 continue
 
@@ -450,6 +458,7 @@ def get_args(args=None) -> ScriptArguments:
         actions=ActionsArguments(open_pr=False, skip_if_commits_reference_issue=True),
         filter_gold_patch_positives=False,
         gold_patch_results_file=GOLD_TEST,
+        use_dockerized_inference=False,
     )
 
     # Nicer yaml dumping of multiline strings

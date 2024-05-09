@@ -17,13 +17,13 @@ model_name="azure:gpt4"
 ####################################################################################################
 # experiment configurations
 ####################################################################################################
-per_instance_cost_limit="4.0"
+per_instance_cost_limit="2.0"
 use_hepllm=false
 skip_existing=false
 
 # data split
-split="dev"
-# split="test"
+# split="dev"
+split="test"
 
 num_processes=1
 
@@ -52,6 +52,24 @@ else
 fi
 
 ####################################################################################################
+# swe_image
+####################################################################################################
+# if split is dev, use image_name="sweagent/swe-agent:latest"
+# if split is test and use_dockerized_inference=true, use image_name="ghcr.io/xingyaoww/eval-swe-bench-all:lite-v1.1"
+use_dockerized_inference=true
+
+if [ "$split" = "dev" ]; then
+    image_name="sweagent/swe-agent:latest"
+else
+    if [ "$use_dockerized_inference" = true ]; then
+        image_name="ghcr.io/xingyaoww/eval-swe-bench-all:lite-v1.1"
+    else
+        image_name="sweagent/swe-agent:latest"
+    fi
+fi
+
+
+####################################################################################################
 # default configuration file
 config_file="./config/default.yaml"
 suffix="${split}_${start_index}_${num_tasks_text}_baseline"
@@ -69,7 +87,7 @@ fi
 # hep-llm configuration file
 # config_file="./config/default_hepllm_v0.1.yaml"
 
-use_hepllm=true
+use_hepllm=false
 
 if [ "$use_hepllm" = true ]; then
     config_file="./config/hepllm/default-v7-root-level.yaml"
@@ -149,6 +167,8 @@ if [ "$run_inference" = true ]; then
             --filter_gold_patch_positives="$use_gold_patch_filter" \
             --gold_patch_results_file="$gold_patch_results_path" \
             --num_processes="$num_processes" \
+            --use_dockerized_inference="$use_dockerized_inference" \
+            --image_name="$image_name" \
             --skip_existing="$skip_existing"
     fi
 fi
