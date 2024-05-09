@@ -86,6 +86,7 @@ class ScriptArguments(FlattenedAccess, FrozenSerializable):
     gold_patch_results_file: str = "gold_patch_results.json" # NOTE: used for debug
     num_processes: int = 1 # NOTE: used for multiprocessing
     use_dockerized_inference: bool = False # NOTE: used for dockerized inference
+    run_and_eval: bool = False # NOTE: used for quick evaluation right after dockerized inference
 
     @property
     def run_name(self):
@@ -115,13 +116,13 @@ def save_gold_patch(index, env, traj_dir):
     save_patch(traj_dir, env.data[index]["instance_id"], info)
 
 
-def main(args: ScriptArguments, index=None, num_processes=1):
+def main(args: ScriptArguments, process_index=None, num_processes=1):
     if args.use_dockerized_inference:
         assert args.environment.split == "test", "split must be set to test for dockerized inference"
         assert args.environment.image_name == "ghcr.io/xingyaoww/eval-swe-bench-all:lite-v1.1", "image_name must be set to ghcr.io/xingyaoww/eval-swe-bench-all:lite-v1.1 for dockerized inference"
 
     if num_processes > 1:
-        logger.info(f"🚀 Starting process {index} ...")
+        logger.info(f"🚀 Starting process {process_index} ...")
     logger.info(f"📙 Arguments: {args.dumps_yaml()}")
     agent = Agent("primary", args.agent)
     env = SWEEnv(args.environment, use_dockerized_inference=args.use_dockerized_inference)
@@ -130,7 +131,7 @@ def main(args: ScriptArguments, index=None, num_processes=1):
     traj_dir = Path("trajectories") / Path(args.exp_subdir) / args.run_name
     traj_dir.mkdir(parents=True, exist_ok=True)
 
-    if num_processes == 1 or index == 0:
+    if num_processes == 1 or process_index == 0:
         save_arguments(traj_dir, args)
 
     # NOTE: num_tasks is the number of tasks to run, if -1, run all tasks
@@ -143,9 +144,9 @@ def main(args: ScriptArguments, index=None, num_processes=1):
         num_tasks_process = num_tasks
     else:
         num_tasks_process = int(np.ceil(num_tasks / num_processes))
-        start_index_process = args.start_index + index * num_tasks_process
-        num_tasks_process = min(num_tasks_process, num_tasks - index * num_tasks_process)
-        logger.info(f"🚀 Process {index} will run {num_tasks_process} tasks {start_index_process} to {start_index_process + num_tasks_process}")
+        start_index_process = args.start_index + process_index * num_tasks_process
+        num_tasks_process = min(num_tasks_process, num_tasks - process_index * num_tasks_process)
+        logger.info(f"🚀 Process {process_index} will run {num_tasks_process} tasks {start_index_process} to {start_index_process + num_tasks_process}")
 
     # filter gold patch positives
     if args.filter_gold_patch_positives:
@@ -254,8 +255,17 @@ def main(args: ScriptArguments, index=None, num_processes=1):
                     return_type="info_trajectory",
                 )
 
-            save_predictions(traj_dir, instance_id, info)
+            
+            # Save the trajectory
+            save_predictions(traj_dir, instance_id, info, process_index)
             save_patch(traj_dir, instance_id, info)
+
+            # run evaluation after inference if using dockerized evaluation
+            if args.use_dockerized_inference and args.run_and_eval:
+                # evaluate the current changes after the agent run to check if issue is resolved
+                resolution_status = env.eval_current_state()
+                save_evaluation(traj_dir, resolution_status, instance_id, info, process_index)
+
             if args.actions.open_pr and should_open_pr(args, info, token=env._github_token):
                 env.open_pr(trajectory=trajectory, push_gh_repo_url=args.actions.push_gh_repo_url)
 
@@ -274,10 +284,7 @@ def main(args: ScriptArguments, index=None, num_processes=1):
     # Close the environment
     if num_processes >1:
         env.close()
-        logger.info("🏁 Finished task " + str(index))
-
-
-
+        logger.info("🏁 Finished task " + str(process_index))
 
 def should_open_pr(args: ScriptArguments, info: Dict[str, Any], *, token: str="") -> bool:
     """Does opening a PR make sense?"""
@@ -362,6 +369,24 @@ def should_skip(args: ScriptArguments, traj_dir: Path, instance_id: str) -> bool
             return True
     return False
 
+def save_evaluation(traj_dir, resolution_status, instance_id, info, index=None):
+    """
+    save the evaluation results to a jsonl file
+    """
+    if index is not None:
+        output_file = traj_dir / f"quick_results_{index}.jsonl"
+    else:
+        output_file = traj_dir / "quick_results.jsonl"
+    model_patch = info["submission"] if "submission" in info else None
+    datum = {
+        KEY_MODEL: Path(traj_dir).name,
+        KEY_INSTANCE_ID: instance_id,
+        KEY_PREDICTION: model_patch,
+        'RESOLUTION_STATUS': resolution_status
+    }
+    with open(output_file, "a+") as fp:
+        print(json.dumps(datum), file=fp, flush=True)
+    logger.info(f"Saved evaluations to {output_file}")
 
 def save_predictions(traj_dir: Path, instance_id: str, info, index=None):
     if index is not None:
@@ -460,6 +485,7 @@ def get_args(args=None) -> ScriptArguments:
         filter_gold_patch_positives=False,
         gold_patch_results_file=GOLD_TEST,
         use_dockerized_inference=False,
+        run_and_eval=False,
     )
 
     # Nicer yaml dumping of multiline strings
@@ -488,6 +514,19 @@ def save_combined_predictions(args):
                 for line in infile:
                     outfile.write(line)
 
+def save_combined_evaluations(args):
+    """
+    combines all the predictions files into one
+    """
+    all_preds_files = list(Path("trajectories") / Path(args.exp_subdir) / args.run_name).glob("quick_results_*.jsonl")
+    all_preds_file = Path("trajectories") / Path(args.exp_subdir) / args.run_name / "quick_results.jsonl"
+    # combine all the files into one
+    with open(all_preds_file, "w") as outfile:
+        for file in all_preds_files:
+            with open(file, "r") as infile:
+                for line in infile:
+                    outfile.write(line)
+
 if __name__ == "__main__":
     args = get_args()
 
@@ -503,3 +542,7 @@ if __name__ == "__main__":
 
         # save the predictions in a joint all_preds file
         save_combined_predictions(args)
+
+        if args.use_dockerized_inference and args.run_and_eval:
+            # save the predictions in a joint quick_results jsonl file
+            save_combined_evaluations(args)

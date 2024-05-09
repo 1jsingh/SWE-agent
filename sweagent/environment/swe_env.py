@@ -112,16 +112,14 @@ class SWEEnv(gym.Env):
         
         # Establish connection with execution container
         self.image_name = args.image_name
+        # use dockerized inference
+        self.use_dockerized_inference = use_dockerized_inference # NOTE: this is a flag to use dockerized inference
         self._reset_container()
 
         # Set timeout
         self.timeout = self.args.timeout
         self.idx = 0
         self.clean_multi_line_functions = lambda x: x
-
-        # if using dockerized inference copy the swe_entry script to the container
-        if use_dockerized_inference:
-            self.copy_swe_entry_script()
 
     def copy_swe_entry_script(self):
         """
@@ -139,8 +137,96 @@ class SWEEnv(gym.Env):
         )
         logger.info("🌴 Copied swe_entry script to container ...")
 
+    def eval_current_state(self):
+        """
+        Evaluates whether the issue has been resolved based on the current changes.
+        Used for quick evaluation after the main agent has submitted a patch.
+        """
+        try:
+            # Move to the issue repo
+            self.communicate_with_handling('cd $REPO_PATH', error_msg="Failed to navigate to repo root")
 
-    def reset_alternative(self, index: int = None, apply_test_patch: bool = False) -> Tuple[str, dict]:
+            # Apply the test patch
+            path_to_patch = "/opendevin/swe_tasks/test.patch"
+            self.communicate_with_handling(f'git apply {path_to_patch}', 
+                                                error_msg="Failed to apply test patch")
+
+            # Run the test command
+            self.communicate('$TEST_CMD', timeout_duration=LONG_TIMEOUT)
+
+            # Check the env.returncode
+            resolved_status = 'RESOLVED_FULL' if self.returncode == 0 else 'RESOLVED_NO'
+
+            # remove the test patch
+            self.communicate_with_handling('git apply --reverse f{path_to_patch}', 
+                                                error_msg="Failed to remove test patch")
+
+            # Return resolution status
+            return resolved_status
+        except Exception as e:
+            logger.error(f"Failed to evaluate current state: {e}")
+            return 'EVAL_FAILED'
+
+    def perform_sanity_check(self):
+        """
+        Perform a sanity check to ensure that the environment is set up correctly.
+        # 1. Initial test script should pass
+        2. Apply test patch and run test script again (some tests should fail)
+        3. Apply gold patch and run test script again (all tests should pass)
+        4. Remove both patches
+
+        NOTE: must be done before the agent starts interacting with the environment
+        """
+        # initial setup
+        logger.info("🧑‍🔬 Performing sanity check ...")
+        path_to_test_patch = "/opendevin/swe_tasks/test.patch"
+        path_to_gold_patch = "/opendevin/swe_tasks/gold.patch"
+
+        # # first run the test script and ensure that all tests pass
+        # self.communicate_with_handling(
+        #     input="$TEST_CMD",
+        #     error_msg="Failed to run test script",
+        #     timeout_duration=LONG_TIMEOUT
+        # )
+        # logger.info("All tests passed before applying patches ...")
+
+        # then apply the test patch and run the test script again (some tests should fail)
+        self.communicate_with_handling(
+            input=f"git apply {path_to_test_patch}",
+            error_msg="Sanity check failed: Failed to apply test patch correctly"
+        )
+        self.communicate(
+            input="$TEST_CMD",
+            timeout_duration=LONG_TIMEOUT
+        )
+        assert self.returncode != 0, "Sanity check failed: test script passed after applying test patch"
+        logger.info("Some tests failed after applying test patch (expected)...")
+
+        # then apply the gold patch (all tests should pass)
+        self.communicate_with_handling(
+            input=f"git apply {path_to_gold_patch}",
+            error_msg="Sanity check failed: Failed to apply gold patch correctly"
+        )
+        self.communicate_with_handling(
+            input="$TEST_CMD",
+            error_msg="Sanity check failed: Some tests still failing after applying gold patch",
+            timeout_duration=LONG_TIMEOUT
+        )
+        logger.info("All tests passed after applying gold patch (expected)...")
+
+        # remove both the test and gold patches
+        self.communicate_with_handling(
+            input=f"git apply --reverse {path_to_test_patch}",
+            error_msg="Sanity check error: Failed to remove test patch"
+        )
+        self.communicate_with_handling(
+            input=f"git apply --reverse {path_to_gold_patch}",
+            error_msg="Sanity check error: Failed to remove gold patch"
+        )
+        logger.info("✅ Sanity check passed ... reversing test and gold patches")
+
+
+    def reset_alternative(self, index: int = None, apply_test_patch: bool = False, perform_sanity_check: bool = False) -> Tuple[str, dict]:
         """
         """
         info = {}
@@ -232,6 +318,10 @@ class SWEEnv(gym.Env):
             )
             os.remove(path_to_patch)
         
+        # Perform sanity check
+        if perform_sanity_check:
+            self.perform_sanity_check()
+
         # Write any metadata to info if necessary
         return None, info
 
@@ -510,6 +600,10 @@ class SWEEnv(gym.Env):
                 ) from e
         self.container_obj = client.containers.get(self.container_name)
         self.logger.info("🌱 Environment Initialized")
+
+        # if using dockerized inference copy the swe_entry script to the container
+        if self.use_dockerized_inference:
+            self.copy_swe_entry_script()
 
     def _init_scripts(self):
         """
