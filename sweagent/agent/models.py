@@ -17,6 +17,7 @@ from tenacity import (
     retry_if_not_exception_type,
 )
 from typing import Optional
+import random
 
 logger = logging.getLogger("api_models")
 
@@ -243,7 +244,22 @@ class OpenAIModel(BaseModel):
             else:
                 self.api_model = 'gpt-35-turbo'
                 logger.info("Using Azure OpenAI API ... model: %s", self.api_model)
-            self.client = AzureOpenAI(api_key=cfg["AZURE_OPENAI_API_KEY"], azure_endpoint=cfg["AZURE_OPENAI_ENDPOINT"], api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-02-01"))
+
+            # check if AZURE_OPENAI_KEY_2 is present in the keys.cfg file
+            if "AZURE_OPENAI_API_KEY_2" in cfg:
+                # randomly select between the two keys, endpoint tuples
+                if random.random() < 0.5:
+                    logger.info("Using first Azure OpenAI API Endpoint ...")
+                    AZURE_OPENAI_API_KEY = cfg["AZURE_OPENAI_API_KEY"]
+                    AZURE_OPENAI_ENDPOINT = cfg["AZURE_OPENAI_ENDPOINT"]
+                else:
+                    logger.info("Using second Azure OpenAI API Endpoint ...")
+                    AZURE_OPENAI_API_KEY = cfg["AZURE_OPENAI_API_KEY_2"]
+                    AZURE_OPENAI_ENDPOINT = cfg["AZURE_OPENAI_ENDPOINT_2"]
+                # create the client
+                self.client = AzureOpenAI(api_key=AZURE_OPENAI_API_KEY, azure_endpoint=AZURE_OPENAI_ENDPOINT, api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-02-01"))
+            else:
+                self.client = AzureOpenAI(api_key=cfg["AZURE_OPENAI_API_KEY"], azure_endpoint=cfg["AZURE_OPENAI_ENDPOINT"], api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-02-01"))
         else:
             api_base_url: Optional[str] = cfg.get("OPENAI_API_BASE_URL", None)
             self.client = OpenAI(api_key=cfg["OPENAI_API_KEY"], base_url=api_base_url)

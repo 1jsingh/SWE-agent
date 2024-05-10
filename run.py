@@ -45,6 +45,15 @@ logging.getLogger("simple_parsing").setLevel(logging.WARNING)
 
 GOLD_TEST = "/home/jas/project/qstar/SWE-agent/trajectories/gold/azure-gpt4__SWE-bench_Lite__test__default-v4-root-level__t-0.00__p-0.95__c-10.00__install-1__test_0_all_run1_gold_patch/results.json"
 
+RESOLUTION_STATUS_EMOTICONS = {
+    "RESOLVED_FULL": "🎉",
+    "RESOLVED_PARTIAL": "🎉❌",
+    "RESOLVED": "🎉",
+    "UNRESOLVED": "❌",
+    "RESOLVED_NO": "❌",
+    "EARLY_EXIT": "🚪",
+    "EVAL_ERROR": "🚪❓❓",
+}
 
 @dataclass(frozen=True)
 class ActionsArguments(FlattenedAccess, FrozenSerializable):
@@ -264,6 +273,11 @@ def main(args: ScriptArguments, process_index=None, num_processes=1):
             if args.use_dockerized_inference and args.run_and_eval:
                 # evaluate the current changes after the agent run to check if issue is resolved
                 resolution_status = env.eval_current_state()
+                # log the evaluation results with nice message and emoji (based on result)
+                logger.info("##################################################")
+                resolution_status_display_text = resolution_status + RESOLUTION_STATUS_EMOTICONS.get(resolution_status, "❓")
+                logger.info(f"🐇 Quick Evaluation Results:\nTask Index: {index}\nInstance ID: {instance_id}\nSplit: {args.environment.split}\nRESOLUTION STATUS: {resolution_status_display_text}")
+                logger.info("##################################################")
                 save_evaluation(traj_dir, resolution_status, instance_id, info, process_index)
 
             if args.actions.open_pr and should_open_pr(args, info, token=env._github_token):

@@ -158,7 +158,7 @@ class SWEEnv(gym.Env):
             resolved_status = 'RESOLVED_FULL' if self.returncode == 0 else 'RESOLVED_NO'
 
             # remove the test patch
-            self.communicate_with_handling('git apply --reverse f{path_to_patch}', 
+            self.communicate_with_handling(f'git apply --reverse {path_to_patch}', 
                                                 error_msg="Failed to remove test patch")
 
             # Return resolution status
@@ -226,7 +226,7 @@ class SWEEnv(gym.Env):
         logger.info("✅ Sanity check passed ... reversing test and gold patches")
 
 
-    def reset_alternative(self, index: int = None, apply_test_patch: bool = False, perform_sanity_check: bool = False) -> Tuple[str, dict]:
+    def reset_alternative(self, index: int = None, apply_test_patch: bool = False, perform_sanity_check: bool = True) -> Tuple[str, dict]:
         """
         """
         info = {}

@@ -44,7 +44,7 @@ use_gold_patch_filter=false
 
 # Number of tasks to run the evaluation on (default is -1, which means all tasks)
 num_tasks=1
-start_index=41
+start_index=8
 if [ "$num_tasks" -eq -1 ]; then
     num_tasks_text="all"
 else
@@ -91,7 +91,7 @@ fi
 # hep-llm configuration file
 # config_file="./config/default_hepllm_v0.1.yaml"
 
-use_hepllm=true
+use_hepllm=false
 
 if [ "$use_hepllm" = true ]; then
     # config_file="./config/hepllm/default-v4-root-level.yaml"
@@ -126,9 +126,10 @@ if [ "$use_gold_patches" = true ]; then
 fi
 ####################################################################################################
 
-# sleep for 2 sec to allow saving the logs
-# sleep 2
 
+####################################################################################################
+# run inference and eval
+####################################################################################################
 run_inference=true
 # define run_eval to be true if run_inference is false
 if [ "$run_inference" = true ]; then 
@@ -137,6 +138,11 @@ else
     run_eval=true
 fi
 run_eval=true
+
+####################################################################################################
+# run and quick eval using dockerized inference
+####################################################################################################
+run_and_quick_eval=true
 
 if [ "$run_inference" = true ]; then 
 
@@ -176,6 +182,7 @@ if [ "$run_inference" = true ]; then
             --use_dockerized_inference="$use_dockerized_inference" \
             --image_name="$image_name" \
             --use_planning="$use_planning" \
+            --run_and_eval="$run_and_quick_eval" \
             --skip_existing="$skip_existing"
     fi
 fi
