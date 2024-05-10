@@ -32,6 +32,7 @@ class ModelArguments(FrozenSerializable):
     top_p: float = 1.0
     replay_path: str = None
     host_url: str = "localhost:11434"
+    azure_api_index: int = None
 
 
 @dataclass
@@ -245,21 +246,24 @@ class OpenAIModel(BaseModel):
                 self.api_model = 'gpt-35-turbo'
                 logger.info("Using Azure OpenAI API ... model: %s", self.api_model)
 
-            # check if AZURE_OPENAI_KEY_2 is present in the keys.cfg file
-            if "AZURE_OPENAI_API_KEY_2" in cfg:
-                # randomly select between the two keys, endpoint tuples
-                if random.random() < 0.5:
-                    logger.info("Using first Azure OpenAI API Endpoint ...")
-                    AZURE_OPENAI_API_KEY = cfg["AZURE_OPENAI_API_KEY"]
-                    AZURE_OPENAI_ENDPOINT = cfg["AZURE_OPENAI_ENDPOINT"]
-                else:
-                    logger.info("Using second Azure OpenAI API Endpoint ...")
-                    AZURE_OPENAI_API_KEY = cfg["AZURE_OPENAI_API_KEY_2"]
-                    AZURE_OPENAI_ENDPOINT = cfg["AZURE_OPENAI_ENDPOINT_2"]
-                # create the client
-                self.client = AzureOpenAI(api_key=AZURE_OPENAI_API_KEY, azure_endpoint=AZURE_OPENAI_ENDPOINT, api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-02-01"))
+            # select the azure endpoint and key (multiple keys and endpoints are supported for load balancing)
+            if args.azure_api_index is None:
+                AZURE_OPENAI_API_KEY = cfg["AZURE_OPENAI_API_KEY"]
+                AZURE_OPENAI_ENDPOINT = cfg["AZURE_OPENAI_ENDPOINT"]
+            elif args.azure_api_index == -1:
+                # randomly select between the keys, endpoint tuples
+                num_endpoints = cfg.get("AZURE_OPENAI_NUM_ENDPOINTS", 1)
+                # randomly select a number (1, ... num_endpoints)
+                api_index = random.randint(1, num_endpoints)
+                AZURE_OPENAI_API_KEY = cfg[f"AZURE_OPENAI_API_KEY_V{api_index}"]
+                AZURE_OPENAI_ENDPOINT = cfg[f"AZURE_OPENAI_ENDPOINT_V{api_index}"]
             else:
-                self.client = AzureOpenAI(api_key=cfg["AZURE_OPENAI_API_KEY"], azure_endpoint=cfg["AZURE_OPENAI_ENDPOINT"], api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-02-01"))
+                AZURE_OPENAI_API_KEY = cfg[f"AZURE_OPENAI_API_KEY_V{args.azure_api_index}"]
+                AZURE_OPENAI_ENDPOINT = cfg[f"AZURE_OPENAI_ENDPOINT_V{args.azure_api_index}"]
+            
+            # create the client
+            self.client = AzureOpenAI(api_key=AZURE_OPENAI_API_KEY, azure_endpoint=AZURE_OPENAI_ENDPOINT, api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-02-01"))
+
         else:
             api_base_url: Optional[str] = cfg.get("OPENAI_API_BASE_URL", None)
             self.client = OpenAI(api_key=cfg["OPENAI_API_KEY"], base_url=api_base_url)

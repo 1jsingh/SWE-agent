@@ -25,7 +25,7 @@ skip_existing=false
 # split="dev"
 split="test"
 
-num_processes=1
+num_processes=4
 
 ####################################################################################################
 # gold patch result files
@@ -43,8 +43,8 @@ use_gold_patch_filter=false
 ####################################################################################################
 
 # Number of tasks to run the evaluation on (default is -1, which means all tasks)
-num_tasks=1
-start_index=8
+num_tasks=8
+start_index=41
 if [ "$num_tasks" -eq -1 ]; then
     num_tasks_text="all"
 else

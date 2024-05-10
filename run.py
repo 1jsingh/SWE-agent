@@ -26,6 +26,7 @@ from sweagent import (
     SWEEnv,
     get_data_path_name,
 )
+
 from swebench import KEY_INSTANCE_ID, KEY_MODEL, KEY_PREDICTION
 from unidiff import PatchSet
 from sweagent.environment.utils import InvalidGithubURL, get_associated_commit_urls, get_gh_issue_data, parse_gh_issue_url
@@ -33,6 +34,9 @@ from sweagent.environment.utils import InvalidGithubURL, get_associated_commit_u
 # NOTE: used for multiprocessing
 from multiprocessing import Pool
 from functools import partial
+from glob import glob
+import copy
+import config
 
 handler = RichHandler(show_time=False, show_path=False)
 handler.setLevel(logging.DEBUG)
@@ -176,7 +180,7 @@ def main(args: ScriptArguments, process_index=None, num_processes=1):
     #         p.map(func, range(args.start_index, args.start_index + num_tasks))
     #     return
 
-    for index in range(args.start_index + start_index_process, args.start_index + start_index_process + num_tasks_process):
+    for index in range(start_index_process, start_index_process + num_tasks_process):
         # index += args.start_index # TODO: remove this line
         try:
             # NOTE: if use_gold_patches is set to True, the agent will use the gold patches as the submission
@@ -461,7 +465,7 @@ def _print_patch_message(patch_output_file: Path):
     console.print(rich.markdown.Markdown("\n".join(content)))
 
 
-def get_args(args=None) -> ScriptArguments:
+def get_args(args=None, azure_api_index=None) -> ScriptArguments:
     """Parse command line arguments and return a ScriptArguments object.
     
     Args:
@@ -489,6 +493,7 @@ def get_args(args=None) -> ScriptArguments:
                 per_instance_cost_limit=2.0,
                 temperature=0.0,
                 top_p=0.95,
+                azure_api_index=azure_api_index,
             ),
             config_file="config/default.yaml",
             use_hepllm=False,
@@ -519,7 +524,8 @@ def save_combined_predictions(args):
     """
     combines all the predictions files into one
     """
-    all_preds_files = list(Path("trajectories") / Path(args.exp_subdir) / args.run_name).glob("all_preds_*.jsonl")
+    traj_dir = Path("trajectories") / Path(args.exp_subdir) / args.run_name
+    all_preds_files = list(glob(f"{traj_dir}/all_preds_*.jsonl"))
     all_preds_file = Path("trajectories") / Path(args.exp_subdir) / args.run_name / "all_preds.jsonl"
     # combine all the files into one
     with open(all_preds_file, "w") as outfile:
@@ -532,7 +538,8 @@ def save_combined_evaluations(args):
     """
     combines all the predictions files into one
     """
-    all_preds_files = list(Path("trajectories") / Path(args.exp_subdir) / args.run_name).glob("quick_results_*.jsonl")
+    traj_dir = Path("trajectories") / Path(args.exp_subdir) / args.run_name
+    all_preds_files = list(glob(f"{traj_dir}/quick_results_*.jsonl"))
     all_preds_file = Path("trajectories") / Path(args.exp_subdir) / args.run_name / "quick_results.jsonl"
     # combine all the files into one
     with open(all_preds_file, "w") as outfile:
@@ -540,6 +547,50 @@ def save_combined_evaluations(args):
             with open(file, "r") as infile:
                 for line in infile:
                     outfile.write(line)
+
+def generate_final_report(args):
+    """
+    generate a final report of the evaluation results
+
+    returns a dictionary showing count of how many resolved, not resolved, total and eval errors
+
+    also stores a quick_eval_report.json file in the trajectories directory with the final report
+        - including the counts as before
+        - as well as keys for which instance ids were generated, resolved, not resolved and eval errors
+    """
+    all_preds_file = Path("trajectories") / Path(args.exp_subdir) / args.run_name / "quick_results.jsonl"
+    with open(all_preds_file, "r") as f:
+        results = [json.loads(line) for line in f]
+
+    # initialize the final results dictionary
+    final_results = {
+        "resolved": 0,
+        "unresolved": 0,
+        "eval_error": 0,
+        "total": len(results),
+        "instance_report": {
+            "resolved": [],
+            "unresolved": [],
+            "eval_error": [],
+            "generated": [],
+        }
+    }
+    
+    # loop through the results and count the number of resolved, unresolved and eval errors
+    for result in results:
+        if result['RESOLUTION_STATUS'] == "RESOLVED_FULL":
+            final_results["resolved"] += 1
+            final_results["instance_report"]["resolved"].append(result[KEY_INSTANCE_ID])
+        elif result['RESOLUTION_STATUS'] == "RESOLVED_NO":
+            final_results["unresolved"] += 1
+            final_results["instance_report"]["unresolved"].append(result[KEY_INSTANCE_ID])
+        elif result['RESOLUTION_STATUS'] == "EVAL_ERROR":
+            final_results["eval_error"] += 1
+            final_results["instance_report"]["eval_error"].append(result[KEY_INSTANCE_ID])
+        final_results["instance_report"]["generated"].append(result[KEY_INSTANCE_ID])
+    
+    return final_results
+
 
 if __name__ == "__main__":
     args = get_args()
@@ -550,9 +601,23 @@ if __name__ == "__main__":
     if args.num_processes == 1:
         main(args)
     else:
+        # load total number of azure openai endpoints available from keys.cfg
+        cfg = config.Config(os.path.join(os.getcwd(), "keys.cfg"))
+        num_endpoints = cfg.get("AZURE_OPENAI_NUM_ENDPOINTS", 1)
+        logger.info(f"🔑 Found {num_endpoints} Azure OpenAI endpoints ...")
+
+        # assign the endpoint idxs (1,2 ... num_endpoints) to each process
+        azure_endpoint_idxs = [(x % num_endpoints) + 1 for x in range(args.num_processes)]
+        logger.info(f"🔑 Assigning Azure OpenAI endpoints to processes: {azure_endpoint_idxs}")
+        
+        # generate the args for each process (have to use get_args again to get the correct azure api index)
+        args_list = []
+        for i in range(args.num_processes):
+            args_list.append(get_args(azure_api_index=azure_endpoint_idxs[i]))
+
         with Pool(args.num_processes) as p:
             # note main (args, index, num_processes) is the function to be run in parallel
-            p.starmap(main, [(args, i, args.num_processes) for i in range(args.num_processes)])
+            p.starmap(main, [(args_list[i], i, args.num_processes) for i in range(args.num_processes)])
 
         # save the predictions in a joint all_preds file
         save_combined_predictions(args)
@@ -560,3 +625,14 @@ if __name__ == "__main__":
         if args.use_dockerized_inference and args.run_and_eval:
             # save the predictions in a joint quick_results jsonl file
             save_combined_evaluations(args)
+
+    # finally if using dockerized inference and run_and_eval is set to True, generate and display a report of the evaluation results
+    if args.use_dockerized_inference and args.run_and_eval:
+        final_results = generate_final_report(args)
+        logger.info("##################################################")
+        logger.info("📊 Final Evaluation Results:")
+        logger.info(f"Resolved: {final_results['resolved']}")
+        logger.info(f"Unresolved: {final_results['unresolved']}")
+        logger.info(f"Eval Errors: {final_results['eval_error']}")
+        logger.info(f"Total: {final_results['total']}")
+        logger.info("##################################################")
