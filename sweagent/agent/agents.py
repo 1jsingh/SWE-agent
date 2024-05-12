@@ -313,6 +313,17 @@ class Agent:
                             "role": "user",
                         }
                     )
+        # initiate the parent and children agents
+        if self.use_hepllm:
+            self.init_hepllm_agents(parent=instance_args.get("parent",None), 
+                                    children=instance_args.get("children", {}))
+
+    def init_hepllm_agents(self, parent=None, children={}):
+        """
+        Initialize the parent and children agents for HEPLLM.
+        """
+        self.parent = parent
+        self.children = children
 
     @property
     def state_command(self) -> str:
@@ -953,8 +964,39 @@ class Agent:
         if return_type == "info_trajectory":
             return info, trajectory
         return trajectory[-1][return_type]
-
     
+    def ask_agent(self, question, agent_name,):
+        """
+        Ask the agent a question and get a response.
+        """
+        if agent_name == 'parent':
+            assert self.parent is not None, f"Parent agent is None ... the current agent is the primary agent ... {self.name}"
+            return self.parent.ask_question(question, keep_question_in_history=False, asking_agent_name=self.name)
+        elif agent_name in self.children:
+            return self.children[agent_name].ask_question(question, keep_question_in_history=True, asking_agent_name=self.name)
+        else:
+            raise ValueError(f"Agent name {agent_name} must be either parent or part of the children agents: {self.children.keys()}")
+
+    def ask_question(self, question, keep_question_in_history=False, asking_agent_name=None):
+        """
+        Ask a question to the agent.
+        """
+        # add the question to the history
+        history = self.local_history
+        # add question
+        question = f"Question from Agent <{asking_agent_name}>:\n {question}"
+        history_ = history + [{"role": "user", "content": question, "agent": self.name}]
+
+        # ask question using model
+        response = self.model.query(history_, use_bfs=False)
+
+        # add response to the history
+        if keep_question_in_history:
+            self.history.append({"role": "user", "content": question, "agent": self.name})
+            self.history.append({"role": "assistant", "content": response, "agent": self.name})
+
+        return response
+
     def run_heirarchial(
         self,
         setup_args: Dict[str, Any],
@@ -1016,6 +1058,12 @@ class Agent:
                 elif 'finish_subtask_and_report_to_main_agent' in action:
                     subtask_report = self.parse_finish_subtask_and_report_to_main_agent(action)
                     return subtask_report, self.get_environment_vars(env)
+                elif 'ask_question_to_subagent' in action or 'ask_question_to_parent_agent' in action:
+                    agent_name, question = self.parse_ask_question_to_agent(action)
+                    if 'ask_question_to_parent_agent' in action:
+                        agent_name = 'parent'
+                    sub_agent_output = self.ask_agent(question, agent_name)
+                    observations.append(sub_agent_output)
                 else:
                     run_action = self._guard_multiline_input(action)
                     for sub_action in self.split_actions(run_action):
@@ -1084,7 +1132,7 @@ class Agent:
         # create the sub-agent args and config
         subagent_hepllm_levels = self.hepllm_levels - 1
         if subagent_hepllm_levels == 1:
-            subagent_config_file = "config/hepllm/default-v5-leaf-level.yaml"
+            subagent_config_file = "config/hepllm/default-v8-leaf-level.yaml"
         else:
             subagent_config_file = "config/hepllm/default-v9-root-level.yaml"   
 
@@ -1110,9 +1158,14 @@ class Agent:
         logger.info("🧑‍💻 SUB-AGENT: Instantiating sub-agent - {} ...".format(agent_name))
         sub_agent = Agent(agent_name, agent_args, is_sub_agent=True)
 
+        # add sub-agent to the children list of the main agent
+        assert agent_name not in self.children, f"Agent {agent_name} already exists in the children list"
+        self.children[agent_name] = sub_agent
+
         # create the setup args for the sub-agent
         sub_setup_args = copy.deepcopy(setup_args)
         sub_setup_args["subtask_instructions"] = subtask_instruction
+        sub_setup_args["parent"] = self #NOTE: experimental add the parent agent to the sub-agent
 
         # provide main agent history to the sub-agent for reference purposes
         use_local_history = True if ("normal" in task_type) else False
@@ -1180,7 +1233,7 @@ class Agent:
         # env.communicate(f"cd {cwd}")
         # self.model.stats.replace(sub_agent.model.stats)
         # return sub_agent_output
-
+    
     def filter_history(self, history):
         """
         Filter the history to remove the assistant's history.
@@ -1230,6 +1283,29 @@ class Agent:
 
         return main_agent_history
     
+    def parse_ask_question_to_agent(self, action):
+        """
+        Parse the ask question to agent action into the agent name and the question.
+        
+        Args:
+            action (str): A string containing the ask question to agent command block.
+
+        Returns:
+            tuple: A tuple containing the agent name and question as strings.
+        """
+        # Split the input into lines
+        lines = action.strip().split('\n')
+        
+        # The first line should contain the ask question to agent command and the agent name
+        first_line = lines[0].strip()
+        _, agent_name = first_line.split(' ', 1)
+
+        # The remaining part of the action block is the question
+        # It starts from the next line till the line before 'end_ask_question_to_agent'
+        question = '\n'.join(line.strip() for line in lines[1:-1]).strip()
+
+        return (agent_name, question)
+
     def parse_subtask_execute(self, action):
         """
         Parse the subtask execute action into the agent name and the subtask instruction.

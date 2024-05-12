@@ -243,7 +243,8 @@ def main(args: ScriptArguments, process_index=None, num_processes=1):
                 "issue": issue,
                 "files": files,
                 "test_files": test_files,
-                "tests": tests
+                "tests": tests,
+                "parent": None, #NOTE: hepllm-v0.6 used for keeping track of children and parent nodes in hierarchical planning
             }
             
             # Run the agent
