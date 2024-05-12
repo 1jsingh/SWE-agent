@@ -36,6 +36,12 @@ from swebench import (
     MAP_VERSION_TO_INSTALL
 )
 from typing import Optional, Tuple
+from multiprocessing import Lock
+
+
+# docker swe entry script lock
+docker_swe_entry_lock = Lock()
+
 
 LONG_TIMEOUT = 500
 PATH_TO_REQS = "/root/requirements.txt"
@@ -125,11 +131,13 @@ class SWEEnv(gym.Env):
         """
         Copy the swe_entry script to the container
         """
-        path_to_script = '$HOME/project/qstar/SWE-agent/docker_env_setup/swe_entry.sh'
-        subprocess.run(
-            f"docker cp {path_to_script} {self.container_name}:/swe_util/swe_entry_v2.sh",
-            shell=True
-        )
+        with docker_swe_entry_lock:
+            # Copy the swe_entry script to the container
+            path_to_script = '$HOME/project/qstar/SWE-agent/docker_env_setup/swe_entry.sh'
+            subprocess.run(
+                f"docker cp {path_to_script} {self.container_name}:/swe_util/swe_entry_v2.sh",
+                shell=True
+            )
         # Set execute permissions on the script within the container
         self.communicate_with_handling(
             input="chown root:root /swe_util/swe_entry_v2.sh",
@@ -226,7 +234,7 @@ class SWEEnv(gym.Env):
         logger.info("✅ Sanity check passed ... reversing test and gold patches")
 
 
-    def reset_alternative(self, index: int = None, apply_test_patch: bool = False, perform_sanity_check: bool = True) -> Tuple[str, dict]:
+    def reset_alternative(self, index: int = None, apply_test_patch: bool = False, perform_sanity_check: bool = False) -> Tuple[str, dict]:
         """
         """
         info = {}
@@ -490,7 +498,17 @@ class SWEEnv(gym.Env):
         # Attempt to run action in container
         observation = ""
         try:
-            observation = self.communicate(input=action, timeout_duration=25)
+            if "regression" in action:
+                # try 3 times max with 25, 50, 100 second timeouts
+                timeouts = [25, 50, 100]
+                for current_timeout in timeouts:
+                    # insert code here to perform the action with the current timeout
+                    logger.info(f"Running regression test: {action} using timeout {current_timeout}")
+                    observation = self.communicate(input=action, timeout_duration=current_timeout)
+                # logger.info(f"Running regression test: {action} using slightly longer timeout")
+                # observation = self.communicate(input=action, timeout_duration=100)
+            else:
+                observation = self.communicate(input=action, timeout_duration=25)
         except TimeoutError:
             try:
                 self.interrupt()

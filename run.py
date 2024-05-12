@@ -32,7 +32,7 @@ from unidiff import PatchSet
 from sweagent.environment.utils import InvalidGithubURL, get_associated_commit_urls, get_gh_issue_data, parse_gh_issue_url
 
 # NOTE: used for multiprocessing
-from multiprocessing import Pool
+from multiprocessing import Pool, Lock
 from functools import partial
 from glob import glob
 import copy
@@ -58,6 +58,10 @@ RESOLUTION_STATUS_EMOTICONS = {
     "EARLY_EXIT": "🚪",
     "EVAL_ERROR": "🚪❓❓",
 }
+# create a lock for file writing
+file_lock_predictions = Lock()
+file_lock_quick_results = Lock()
+
 
 @dataclass(frozen=True)
 class ActionsArguments(FlattenedAccess, FrozenSerializable):
@@ -153,7 +157,7 @@ def main(args: ScriptArguments, process_index=None, num_processes=1):
     assert num_tasks > 0, f"num_tasks={num_tasks} must be positive"
     
     if num_processes == 1:
-        start_index_process = 0 
+        start_index_process = args.start_index
         num_tasks_process = num_tasks
     else:
         num_tasks_process = int(np.ceil(num_tasks / num_processes))
@@ -242,7 +246,7 @@ def main(args: ScriptArguments, process_index=None, num_processes=1):
                 "tests": tests
             }
             
-            
+            # Run the agent
             if args.agent.use_hepllm:
                 # info, trajectory = agent.run_hepllm(
                 #     setup_args=setup_args,
@@ -267,7 +271,7 @@ def main(args: ScriptArguments, process_index=None, num_processes=1):
                     traj_dir=traj_dir,
                     return_type="info_trajectory",
                 )
-
+            
             
             # Save the trajectory
             save_predictions(traj_dir, instance_id, info, process_index)
@@ -391,10 +395,10 @@ def save_evaluation(traj_dir, resolution_status, instance_id, info, index=None):
     """
     save the evaluation results to a jsonl file
     """
-    if index is not None:
-        output_file = traj_dir / f"quick_results_{index}.jsonl"
-    else:
-        output_file = traj_dir / "quick_results.jsonl"
+    # if index is not None:
+        # output_file = traj_dir / f"quick_results_{index}.jsonl"
+    # else:
+    output_file = traj_dir / "quick_results.jsonl"
     model_patch = info["submission"] if "submission" in info else None
     datum = {
         KEY_MODEL: Path(traj_dir).name,
@@ -402,23 +406,27 @@ def save_evaluation(traj_dir, resolution_status, instance_id, info, index=None):
         KEY_PREDICTION: model_patch,
         'RESOLUTION_STATUS': resolution_status
     }
-    with open(output_file, "a+") as fp:
-        print(json.dumps(datum), file=fp, flush=True)
+    with file_lock_quick_results:
+        with open(output_file, "a+") as fp:
+            print(json.dumps(datum), file=fp, flush=True)
     logger.info(f"Saved evaluations to {output_file}")
 
 def save_predictions(traj_dir: Path, instance_id: str, info, index=None):
-    if index is not None:
-        output_file = traj_dir / f"all_preds_{index}.jsonl"
-    else:
-        output_file = traj_dir / "all_preds.jsonl"
+    # if index is not None:
+    #     output_file = traj_dir / f"all_preds_{index}.jsonl"
+    # else:
+    
+    output_file = traj_dir / "all_preds.jsonl"
     model_patch = info["submission"] if "submission" in info else None
     datum = {
         KEY_MODEL: Path(traj_dir).name,
         KEY_INSTANCE_ID: instance_id,
         KEY_PREDICTION: model_patch,
     }
-    with open(output_file, "a+") as fp:
-        print(json.dumps(datum), file=fp, flush=True)
+
+    with file_lock_predictions:
+        with open(output_file, "a+") as fp:
+            print(json.dumps(datum), file=fp, flush=True)
     logger.info(f"Saved predictions to {output_file}")
 
 
@@ -589,6 +597,10 @@ def generate_final_report(args):
             final_results["instance_report"]["eval_error"].append(result[KEY_INSTANCE_ID])
         final_results["instance_report"]["generated"].append(result[KEY_INSTANCE_ID])
     
+    # store the final results in a quick_eval_report.json file
+    quick_eval_report_file = Path("trajectories") / Path(args.exp_subdir) / args.run_name / "quick_eval_report.json"
+    with open(quick_eval_report_file, "w") as f:
+        json.dump(final_results, f, indent=4)
     return final_results
 
 
@@ -596,8 +608,9 @@ if __name__ == "__main__":
     args = get_args()
 
     # check num processes <= 4
-    assert args.num_processes <= 4, "num_processes must be less than or equal to 4"
-
+    assert args.num_processes <= 8, "num_processes must be less than or equal to 4"
+    assert args.num_tasks == -1 or args.num_tasks >= args.num_processes, "num_tasks must be greater than num_processes"
+    
     if args.num_processes == 1:
         main(args)
     else:
@@ -620,11 +633,11 @@ if __name__ == "__main__":
             p.starmap(main, [(args_list[i], i, args.num_processes) for i in range(args.num_processes)])
 
         # save the predictions in a joint all_preds file
-        save_combined_predictions(args)
+        # save_combined_predictions(args) # TODO:  remove not needed with file lock
 
-        if args.use_dockerized_inference and args.run_and_eval:
-            # save the predictions in a joint quick_results jsonl file
-            save_combined_evaluations(args)
+        #if args.use_dockerized_inference and args.run_and_eval:
+        #    # save the predictions in a joint quick_results jsonl file
+        #    save_combined_evaluations(args) # TODO:  remove not needed with file lock
 
     # finally if using dockerized inference and run_and_eval is set to True, generate and display a report of the evaluation results
     if args.use_dockerized_inference and args.run_and_eval:

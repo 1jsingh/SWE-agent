@@ -12,12 +12,16 @@
 # model names with docker
 ####################################################################################################
 model_name="azure:gpt4"
+# model_name="gpt4"
 
+# azure_api_index=None
+# azure_api_index=-1
+# azure_api_index=2
 
 ####################################################################################################
 # experiment configurations
 ####################################################################################################
-per_instance_cost_limit="4.0"
+per_instance_cost_limit="3.0"
 use_hepllm=false
 skip_existing=false
 
@@ -25,7 +29,10 @@ skip_existing=false
 # split="dev"
 split="test"
 
-num_processes=4
+num_processes=1
+echo "########################################################################################"
+echo "ALERT: num_processes is set to $num_processes"
+echo "########################################################################################"
 
 ####################################################################################################
 # gold patch result files
@@ -43,8 +50,8 @@ use_gold_patch_filter=false
 ####################################################################################################
 
 # Number of tasks to run the evaluation on (default is -1, which means all tasks)
-num_tasks=8
-start_index=41
+num_tasks=1
+start_index=99
 if [ "$num_tasks" -eq -1 ]; then
     num_tasks_text="all"
 else
@@ -71,16 +78,16 @@ fi
 ####################################################################################################
 # planning args
 ####################################################################################################
-use_planning=false
+use_planning=true
 
 ####################################################################################################
 # default configuration file
 config_file="./config/default.yaml"
-suffix="${split}_${start_index}_${num_tasks_text}_baseline"
+# suffix="${split}_${start_index}_${num_tasks_text}_baseline_run2"
 if [ "$num_tasks" -eq 1 ] && [ "$start_index" -eq 0 ]; then
     suffix="${split}_baseline"
 else
-    suffix="${split}_${start_index}_${num_tasks_text}_baseline"
+    suffix="${split}_${start_index}_${num_tasks_text}_baseline_run5"
 fi
 
 ####################################################################################################
@@ -91,18 +98,20 @@ fi
 # hep-llm configuration file
 # config_file="./config/default_hepllm_v0.1.yaml"
 
-use_hepllm=false
+use_hepllm=true
 
 if [ "$use_hepllm" = true ]; then
     # config_file="./config/hepllm/default-v4-root-level.yaml"
     # config_file="./config/hepllm/default-v5-root-level.yaml"
     # config_file="./config/hepllm/default-v6-root-level.yaml"
     
-    # config_file="./config/hepllm/default-v7-root-level.yaml"
-    config_file="./config/hepllm/default-v9-root-level.yaml"
+    config_file="./config/hepllm/default-v7-root-level.yaml"
+    config_file="./config/hepllm/default-v10-root-level.yaml"
+    # config_file="./config/hepllm/default-v9-root-level.yaml"
 
     # suffix="${split}_hepllm-lv2-r7-l5__full-mprun-1"
-    suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r7-l5__indv-run-2"
+    suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r7-l5__indv-run-4"
+    suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r10-l5__indv-run-3"
 fi
 
 # experiment suffix
@@ -142,7 +151,7 @@ run_eval=true
 ####################################################################################################
 # run and quick eval using dockerized inference
 ####################################################################################################
-run_and_quick_eval=true
+run_and_quick_eval=false
 
 if [ "$run_inference" = true ]; then 
 
@@ -190,7 +199,6 @@ fi
 ####################################################################################################
 # evaluation on the SWE benchmark
 ####################################################################################################
-
 if [ "$run_eval" = true ]; then
     # print running evaluation with nice dividers
     echo "########################################################################################"

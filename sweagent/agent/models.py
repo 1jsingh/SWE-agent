@@ -262,7 +262,7 @@ class OpenAIModel(BaseModel):
                 AZURE_OPENAI_ENDPOINT = cfg[f"AZURE_OPENAI_ENDPOINT_V{args.azure_api_index}"]
             
             # create the client
-            self.client = AzureOpenAI(api_key=AZURE_OPENAI_API_KEY, azure_endpoint=AZURE_OPENAI_ENDPOINT, api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-02-01"))
+            self.client = AzureOpenAI(api_key=AZURE_OPENAI_API_KEY, azure_endpoint=AZURE_OPENAI_ENDPOINT, api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-04-01-preview"))
 
         else:
             api_base_url: Optional[str] = cfg.get("OPENAI_API_BASE_URL", None)
@@ -290,7 +290,7 @@ class OpenAIModel(BaseModel):
         stop=stop_after_attempt(3),
         retry=retry_if_not_exception_type((CostLimitExceededError, RuntimeError)),
     )
-    def query(self, history: list[dict[str, str]], use_bfs=False, bfs_b=3) -> str:
+    def query(self, history: list[dict[str, str]], use_bfs=False, bfs_b=5) -> str:
         """
         Query the OpenAI API with the given `history` and return the response.
         """
@@ -299,7 +299,9 @@ class OpenAIModel(BaseModel):
 
             if use_bfs:
                 # add BFS prompt at the end of the last message
-                bfs_prompt = f"LETS TAKE SOME TIME TO THINK FOR THE NEXT ACTION:\nBefore generating an output, consider {bfs_b} significantly different thought generations (no actions needed) for the next step.\n you be a bit detailed \n\n Finally, decide which action (thought) provides the most promising approach to solve the task as efficiently as possible while still minimizing risk of making mistakes."
+                bfs_prompt = f"LETS TAKE SOME TIME TO THINK FOR THE NEXT ACTION:\nBefore generating an output, consider {bfs_b} significantly different thought generations (no actions needed) for the next step.\n you be a bit detailed \n\n Finally, decide which action (thought) provides the most promising approach to solve the task as quickly and efficiently as possible while still minimizing risk of making mistakes."
+                bfs_prompt = f"LETS TAKE SOME TIME TO THINK FOR THE NEXT ACTION:\nBefore generating an output, consider {bfs_b} significantly different thought generations (no actions needed) for the next step.\n you can be a bit more concise and to the point \n\n Finally, decide which action (thought) provides the most promising approach to solve the task as quickly and efficiently as possible while still minimizing risk of making mistakes. Note the goal is to quickly solve the bug and pass the tests \n IMPORTANT: you have to solve the task on your own, you cannot contact the user or internet for help. you just have access to the repo and tools (as explaned in the task description). Also you dont need to worry about changing documentation currently."
+
                 messages[-1]["content"] += f"\n\n{bfs_prompt}"
 
                 preliminary_response = self.client.chat.completions.create(
@@ -315,7 +317,7 @@ class OpenAIModel(BaseModel):
                 messages.append({"role": "assistant", "content": next_action_analysis})
 
                 # actual response generation
-                response_generation_prompt = f"LETS CONTINUE:\nNow, generate the actual (thought/action) response in the standard format."
+                response_generation_prompt = f"LETS CONTINUE:\nNow, generate the actual (thought/action) response in the standard format. \n Note that the different thought generations/decision analysis would not be available going forward so remember to retain the key points when generating the standard thought/action response. Also the response should not refer to the analysis, just use its findings for a generating a detailed real thought and action \n"
                 messages.append({"role":"user", "content": response_generation_prompt})    
 
 

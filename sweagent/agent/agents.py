@@ -970,91 +970,104 @@ class Agent:
         Return the final value of the specified return type.
         """
         
-        # use gold patch for debugging
-        if use_gold_patch:
+        try:
+            # use gold patch for debugging
+            if use_gold_patch:
+                trajectory = []
+                info = {"submission": setup_args["patch"]}
+                return info, trajectory
+
+            done = False
+            assert env.container_obj is not None
+            assert self.config is not None  # mypy
+
+            if env.container_obj.id != self.last_container_id:
+                logger.info(
+                    f"Initializing agent settings for container {env.container_obj.id}"
+                )
+                self.init_environment_vars(env)
+                self.last_container_id = env.container_obj.id
+            # Re-initialize primary (sets up history, model stats, etc. but mainly related to model not docker)
+            self.setup(setup_args, init_model_stats)
+
+            # Run action/observation loop
             trajectory = []
-            info = {"submission": setup_args["patch"]}
-            return info, trajectory
+            info = {}
 
-        done = False
-        assert env.container_obj is not None
-        assert self.config is not None  # mypy
+            index = 0 # TODO: REMOVE DEBUG
 
-        if env.container_obj.id != self.last_container_id:
-            logger.info(
-                f"Initializing agent settings for container {env.container_obj.id}"
-            )
-            self.init_environment_vars(env)
-            self.last_container_id = env.container_obj.id
-        # Re-initialize primary (sets up history, model stats, etc. but mainly related to model not docker)
-        self.setup(setup_args, init_model_stats)
+            while not done:
+                state = env.communicate(self.state_command) if self.state_command else None
+                thought, action, output = self.forward(
+                    observation, env.get_available_actions(), state
+                )
+                
+                # # TODO: REMOVE DEBUG
+                # index += 1
+                # if index > 2:
+                #     exit()
+                
+                observations = list()
+                if 'subtask_execute' in action:
+                    assert self.hepllm_levels > 1, "Heirarchial levels must be greater than 1 for subtask delegation"
+                    agent_name, task_type, subtask_instruction = self.parse_subtask_execute(action)
+                    sub_agent_output = self.sub_agent_execute_stateless(agent_name, task_type, subtask_instruction, env, observation, setup_args)
+                    observations.append(sub_agent_output)
+                elif 'finish_subtask_and_report_to_main_agent' in action:
+                    subtask_report = self.parse_finish_subtask_and_report_to_main_agent(action)
+                    return subtask_report, self.get_environment_vars(env)
+                else:
+                    run_action = self._guard_multiline_input(action)
+                    for sub_action in self.split_actions(run_action):
+                        if (
+                            sub_action["agent"] == self.name
+                            or sub_action["cmd_name"] == self.config.submit_command
+                        ):
+                            obs, _, done, info = env.step(sub_action["action"])
+                            observations.append(obs)
+                            if sub_action["cmd_name"] == self.config.submit_command:
+                                done = True
+                            if done:
+                                break
+                        else:
+                            agent_name = sub_action["agent"]
+                            sub_agent_output = self.call_subroutine(agent_name, sub_action, env)
+                            observations.append(sub_agent_output)
 
-        # Run action/observation loop
-        trajectory = []
-        info = {}
+                observation = "\n".join([obs for obs in observations if obs is not None])
 
-        index = 0 # TODO: REMOVE DEBUG
-
-        while not done:
-            state = env.communicate(self.state_command) if self.state_command else None
-            thought, action, output = self.forward(
-                observation, env.get_available_actions(), state
-            )
-            
-            # # TODO: REMOVE DEBUG
-            # index += 1
-            # if index > 2:
-            #     exit()
-            
-            observations = list()
-            if 'subtask_execute' in action:
-                assert self.hepllm_levels > 1, "Heirarchial levels must be greater than 1 for subtask delegation"
-                agent_name, task_type, subtask_instruction = self.parse_subtask_execute(action)
-                sub_agent_output = self.sub_agent_execute_stateless(agent_name, task_type, subtask_instruction, env, observation, setup_args)
-                observations.append(sub_agent_output)
-            elif 'finish_subtask_and_report_to_main_agent' in action:
-                subtask_report = self.parse_finish_subtask_and_report_to_main_agent(action)
+                trajectory.append(
+                    {
+                        "action": action,
+                        "observation": observation,
+                        "response": output,
+                        "state": state,
+                        "thought": thought,
+                    }
+                )
+                info["model_stats"] = self.model.stats.to_dict()
+                if traj_dir:
+                    self.save_trajectory(trajectory, traj_dir, env, info)
+            if return_type == "info":
+                return info
+            if return_type == "info_trajectory":
+                return info, trajectory
+            if return_type == "subtask_report":
+                subtask_report = "SUBTASK REPORT: Finishing subtask and need to submit due to exit cost"
                 return subtask_report, self.get_environment_vars(env)
+            return trajectory[-1][return_type]
+        except KeyboardInterrupt:
+            if not self.is_sub_agent:
+                logger.info("Exiting with autosubmission due to KeyboardInterrupt")
+                env.communicate(input="submit")
+                submission = env.get_submission('submit', observation)
+                assert submission is not None and submission.strip() != "", AssertionError('No submission found.')
+                env.logger.info(f"Found submission: {submission}")
+                info["submission"] = submission
+                return info, trajectory
             else:
-                run_action = self._guard_multiline_input(action)
-                for sub_action in self.split_actions(run_action):
-                    if (
-                        sub_action["agent"] == self.name
-                        or sub_action["cmd_name"] == self.config.submit_command
-                    ):
-                        obs, _, done, info = env.step(sub_action["action"])
-                        observations.append(obs)
-                        if sub_action["cmd_name"] == self.config.submit_command:
-                            done = True
-                        if done:
-                            break
-                    else:
-                        agent_name = sub_action["agent"]
-                        sub_agent_output = self.call_subroutine(agent_name, sub_action, env)
-                        observations.append(sub_agent_output)
-
-            observation = "\n".join([obs for obs in observations if obs is not None])
-
-            trajectory.append(
-                {
-                    "action": action,
-                    "observation": observation,
-                    "response": output,
-                    "state": state,
-                    "thought": thought,
-                }
-            )
-            info["model_stats"] = self.model.stats.to_dict()
-            if traj_dir:
-                self.save_trajectory(trajectory, traj_dir, env, info)
-        if return_type == "info":
-            return info
-        if return_type == "info_trajectory":
-            return info, trajectory
-        if return_type == "subtask_report":
-            subtask_report = "SUBTASK REPORT: Finishing subtask and need to submit due to exit cost"
-            return subtask_report, self.get_environment_vars(env)
-        return trajectory[-1][return_type]
+                raise
+                
 
     def sub_agent_execute_stateless(self, agent_name, task_type, subtask_instruction, env, previous_observation=None, setup_args=None):
         """
@@ -1071,7 +1084,7 @@ class Agent:
         # create the sub-agent args and config
         subagent_hepllm_levels = self.hepllm_levels - 1
         if subagent_hepllm_levels == 1:
-            subagent_config_file = "config/hepllm/default-v7-leaf-level.yaml"
+            subagent_config_file = "config/hepllm/default-v5-leaf-level.yaml"
         else:
             subagent_config_file = "config/hepllm/default-v9-root-level.yaml"   
 
@@ -1084,6 +1097,7 @@ class Agent:
                 per_instance_cost_limit=self.args.model.per_instance_cost_limit,
                 temperature=self.args.model.temperature,
                 top_p=self.args.model.top_p,
+                azure_api_index=self.args.model.azure_api_index,
             )
         agent_args = AgentArguments(
             model=model,

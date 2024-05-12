@@ -88,6 +88,7 @@ export SWE_BENCH_DIR=$SWE_BENCH_DIR
 export REPO_PATH=$REPO_PATH
 export TEST_CMD=$TEST_CMD
 export CONDA_ENV_NAME=$CONDA_ENV_NAME
+export SWE_TASK_DIR=$SWE_TASK_DIR
 
 # also export it to bash profile
 # remove the previous bash profile
@@ -96,6 +97,7 @@ echo "export SWE_BENCH_DIR=\"$SWE_BENCH_DIR\"" >> ~/.bash_profile
 echo "export REPO_PATH=\"$REPO_PATH\"" >> ~/.bash_profile
 echo "export TEST_CMD=\"$TEST_CMD\"" >> ~/.bash_profile
 echo "export CONDA_ENV_NAME=\"$CONDA_ENV_NAME\"" >> ~/.bash_profile
+echo "export SWE_TASK_DIR=\"$SWE_TASK_DIR\"" >> ~/.bash_profile
 
 echo "CONDA_ENV_NAME: $CONDA_ENV_NAME"
 
