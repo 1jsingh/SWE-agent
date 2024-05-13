@@ -51,7 +51,7 @@ use_gold_patch_filter=false
 
 # Number of tasks to run the evaluation on (default is -1, which means all tasks)
 num_tasks=1
-start_index=99
+start_index=100
 if [ "$num_tasks" -eq -1 ]; then
     num_tasks_text="all"
 else
@@ -235,10 +235,6 @@ if [ "$run_eval" = true ]; then
     # get absolute path for the results dir
     results_dir=$(realpath "$results_dir")
 
-    # output directory as absolute path
-    output_dir=$(dirname "$predictions_path")
-    output_dir=$(realpath "$output_dir")
-
     if [ ! -d "$results_dir" ]; then
         mkdir -p "$results_dir"
         echo "Created results directory at $results_dir"
@@ -269,27 +265,11 @@ if [ "$run_eval" = true ]; then
                 --timeout 900 \
                 --verbose
     else
-        # run evaluation
         python evaluation_docker/run_evaluation.py \
-            --predictions_path "${predictions_path}" \
-            --log_dir "${results_dir}" \
-            --swe_bench_tasks "${dataset_name_or_path}" \
-            --num_processes 10 \
+            --predictions_path "$predictions_path" \
+            --swe_bench_tasks "$dataset_name_or_path" \
+            --log_dir "$results_dir" \
             --timeout 900 \
             --skip_existing
-
-        # generate report
-        python evaluation_docker/generate_report.py \
-            --predictions_path ${predictions_path} \
-            --log_dir ${results_dir} \
-            --output_dir ${output_dir} \
-            --swe_bench_tasks "${dataset_name_or_path}"
-
-        # python evaluation_docker/run_evaluation_v2.py \
-        #     --predictions_path "$predictions_path" \
-        #     --swe_bench_tasks "$dataset_name_or_path" \
-        #     --log_dir "$results_dir" \
-        #     --timeout 900 \
-        #     --skip_existing
     fi
 fi

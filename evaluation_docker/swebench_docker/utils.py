@@ -8,47 +8,8 @@ from swebench_docker.constants import (
     MAP_REPO_TO_REQS_PATHS,
     MAP_REPO_TO_ENV_YML_PATHS,
     SWE_BENCH_URL_RAW,
-    NON_TEST_EXTS, KEY_INSTANCE_ID,
+    NON_TEST_EXTS,
 )
-
-
-def get_conda_env_names(conda_source: str, env: dict = None) -> list:
-    """
-    Get list of conda environment names for given conda path
-
-    Args:
-        conda_source (str): Path to conda executable
-    Returns:
-        env_names (list): List of conda environment names
-    """
-    # Get list of conda environments
-    try:
-        conda_envs = subprocess.run(
-            f"{conda_source} env list".split(" "), check=True, capture_output=True, text=True, env=env,
-        )
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
-        print(f"Error stdout: {e.stdout}")
-        print(f"Error stderr: {e.stderr}")
-        raise e
-    output = conda_envs.stdout
-    lines = output.split("\n")
-    # Store environment names to list
-    env_names = []
-    for line in lines:
-        if line.startswith("#"):
-            continue
-        if line.strip() == "":
-            continue
-        parts = line.split()
-        if len(parts) == 3:
-            env_name = parts[0]
-        if len(parts) == 2:
-            env_name = parts[0]
-        elif len(parts) == 1:
-            env_name = parts[0].split('/')[-1]
-        env_names.append(env_name)
-    return env_names
 
 
 def get_environment_yml(
@@ -429,41 +390,3 @@ def has_attribute_or_import_error(log_before):
         if any([(x in lines_1 or x in lines_2) for x in ['error', 'fail']]):
             return True
     return False
-
-
-
-def get_eval_refs(data_path_or_name):
-    from datasets import load_dataset, load_from_disk
-
-    file_name = data_path_or_name.replace("/", "_")
-    if os.path.isfile(f"{file_name}.json"):
-        with open(f"{file_name}.json", "r") as f:
-            return json.loads(f.read())
-
-    decode_keys = False
-    if os.path.isfile(data_path_or_name):
-        if data_path_or_name.endswith(".jsonl"):
-            data = [json.loads(l) for l in open(data_path_or_name).readlines()]
-        elif data_path_or_name.endswith(".json"):
-            data = json.load(open(data_path_or_name, "r"))
-    elif os.path.isdir(data_path_or_name):
-        data = load_from_disk(data_path_or_name)
-        decode_keys = True
-    else:
-        data = load_dataset(data_path_or_name)
-        decode_keys = True
-    if isinstance(data, dict):
-        all_data = list()
-        for split in data.keys():
-            all_data.extend(data[split])
-        data = all_data
-    if decode_keys:
-        for datum in data:
-            for key in ["PASS_TO_PASS", "FAIL_TO_PASS"]:
-                datum[key] = json.loads(datum[key])
-    d = {d[KEY_INSTANCE_ID]: d for d in data}
-    with open(f"{file_name}.json", "w") as f:
-        f.write(json.dumps(d))
-
-    return d
-
