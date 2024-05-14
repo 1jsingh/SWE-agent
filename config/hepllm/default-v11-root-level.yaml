@@ -48,8 +48,6 @@ instance_template: |-
      If the bug reproduction script does not print anything when it succesfully runs, we recommend adding a print("Script completed successfully, no errors.") command at the end of the file,
      so that you can be sure that the script indeed ran fine all the way through. 
 
-     Also dont modify or add the tests in existing unit-test files for the repo. Please create new test/reproduction files for the same, or use test files that you have created.
-
   2. IMPORTANT: Note that the environment usually including the conda env and all packages will already be installed for you. However, if you have trouble reproducing the github issue due to some errors, you can and should install the required packages required using standard bash commands (except the root repo package since that is installed in edit mode and should not be replaced). Remember you are root in the docker by default, so system level packages (if needed) can be installed without sudo.
 
   3. If you run a command and it doesn't work, try running a different command. A command that did not work once will not work the second time unless you modify it!
@@ -62,17 +60,19 @@ instance_template: |-
 
   7. When editing files, it is easy to accidentally specify a wrong line number or to write code with incorrect indentation. Always check the code after you issue an edit to make sure that it reflects what you wanted to accomplish. If it didn't, issue another command to fix it.
     
-  8. MOST IMPORTANT: You should assign / delegate smaller subtasks (e.g. reproducing the issue) other agents using 'subtask_execute' action. This will allow you to spend most of your time on more complex tasks and also be able to plan better.
+  8. Do not redo the effort of other agents (e.g. reproduction script). If you see that another agent has already done something, you should not redo it. You should build on top of it.
 
-  9. You should work in high-level action space (leveraging subagents), and use subagents for low-entropy subtasks.
+  9. MOST IMPORTANT: You should assign / delegate smaller subtasks (e.g. reproducing the issue) other agents using 'subtask_execute' action. This will allow you to spend most of your time on more complex tasks and also be able to plan better.
 
-  10. Do not redo the effort of other agents (e.g. reproduction script). If you see that another agent has already done something, you should not redo it. You should build on top of it.
-
-  11. Remember your goal is to solve the bug/issue as efficiently as possible while minimizing the chances of making a mistake.
+    9a. You should work in high-level action space (leveraging subagents), and use subagents for low-entropy or smaller subtasks.
+  
+  10. Remember your goal is to solve the bug/issue as efficiently as possible while minimizing the chances of making a mistake.
      CRITICAL NOTICE:  you are being told a million times --> Take note of the traceback error and try to sequentially trace it back to where the error is coming from. Dont blindly try to make changes without understanding the source of the error.
 
   NOTE ABOUT THE EDIT COMMAND: Indentation really matters! When editing a file, make sure to insert appropriate indentation before each line! 
   If you try an edit and it fails once, just pass it to a subagent to make the edit. They will handle the syntax and indentation for you.
+
+  You are being told a million times --> YOU MUST NEVER MODIFY OR DELETE THE EXISTING STANDARD TEST FILES FOR THE REPO. Please create new test/reproduction files or reuse reproduction scripts previously created while solving the github issue by you, main-agent or the subagents.
 
   (Open file: {open_file})
   (Current directory: {working_dir})

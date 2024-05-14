@@ -239,8 +239,8 @@ class Agent:
         self.is_sub_agent = is_sub_agent
 
         # NOTE: Added for Planning
-        self.use_bfs = args.use_planning and args.use_hepllm and not self.is_sub_agent
-    
+        # self.use_bfs = args.use_planning and args.use_hepllm and not self.is_sub_agent
+        self.use_bfs = args.use_planning and not self.is_sub_agent
 
     def setup(self, instance_args, init_model_stats=None) -> None:
         """Setup the agent for a new instance.
@@ -1136,11 +1136,11 @@ class Agent:
         else:
             subagent_config_file = "config/hepllm/default-v9-root-level.yaml"   
 
-        if 'normal' in task_type:
+        if 'normal' not in task_type:
             model = self.args.model
         else:
             model = ModelArguments(
-                model_name=self.args.model.model_name,#"gpt-3.5-turbo",
+                model_name="gpt-4o",#self.args.model.model_name,#"gpt-3.5-turbo",
                 total_cost_limit=0.0,
                 per_instance_cost_limit=self.args.model.per_instance_cost_limit,
                 temperature=self.args.model.temperature,

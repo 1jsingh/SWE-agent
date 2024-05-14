@@ -53,8 +53,6 @@ instance_template: |-
      
      If the bug reproduction script does not print anything when it succesfully runs, we recommend adding a print("Script completed successfully, no errors.") command at the end of the file,
      so that you can be sure that the script indeed ran fine all the way through. 
-
-    1b. REPO INTEGRITY ALERT: Also dont modify or add the tests in existing unit-test files for the repo. Please create new test/reproduction files for the same, or use test files that you have created.
   
   1b. IMPORTANT: Usually the environment including the conda environment and all packages will already be installed for you. However, if you have trouble reproducing the github issue due to some errors, you can and should install the required packages required using standard bash commands (except the root repo package since that is installed in edit mode and should not be replaced). Remember you are root in the docker by default, so system level packages (if needed) can be installed without sudo.
 
@@ -83,6 +81,7 @@ instance_template: |-
 
   NOTE ABOUT THE EDIT COMMAND: Indentation really matters! When editing a file, make sure to insert appropriate indentation before each line! 
 
+  IMPORTANT: You are being told a million times --> YOU MUST NEVER MODIFY OR DELETE THE EXISTING UNIT TEST FILES/FOLDERS FOR THE REPO. Please create new test/reproduction files for the tests that you are adding (you can still reuse test/reproduction scripts previously created while solving the github issue by you, main-agent or the subagents).
 
   (Open file: {open_file})
   (Current directory: {working_dir})

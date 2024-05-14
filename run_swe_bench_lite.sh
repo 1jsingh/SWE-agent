@@ -7,11 +7,12 @@
 # model_name="gpt4"
 # model_name="azure:gpt-4-turbo"
 # model_name="azure:gpt-4"
+model_name='gpt-4o'
+model_name="azure:gpt4"
 
 ####################################################################################################
 # model names with docker
 ####################################################################################################
-model_name="azure:gpt4"
 # model_name="gpt4"
 
 # azure_api_index=None
@@ -23,6 +24,7 @@ model_name="azure:gpt4"
 ####################################################################################################
 per_instance_cost_limit="2.0"
 use_hepllm=false
+use_planning=false
 skip_existing=false
 
 # data split
@@ -51,7 +53,7 @@ use_gold_patch_filter=false
 
 # Number of tasks to run the evaluation on (default is -1, which means all tasks)
 num_tasks=1
-start_index=99
+start_index=94
 if [ "$num_tasks" -eq -1 ]; then
     num_tasks_text="all"
 else
@@ -78,7 +80,6 @@ fi
 ####################################################################################################
 # planning args
 ####################################################################################################
-use_planning=true
 
 ####################################################################################################
 # default configuration file
@@ -87,7 +88,8 @@ config_file="./config/default.yaml"
 if [ "$num_tasks" -eq 1 ] && [ "$start_index" -eq 0 ]; then
     suffix="${split}_baseline"
 else
-    suffix="${split}_${start_index}_${num_tasks_text}_baseline_run5"
+    suffix="${split}_${start_index}_${num_tasks_text}_baseline_bfs5_run2"
+    suffix="${split}_${start_index}_${num_tasks_text}_baseline_run2"
 fi
 
 ####################################################################################################
@@ -99,6 +101,7 @@ fi
 # config_file="./config/default_hepllm_v0.1.yaml"
 
 use_hepllm=true
+use_planning=true
 
 if [ "$use_hepllm" = true ]; then
     # config_file="./config/hepllm/default-v4-root-level.yaml"
@@ -113,7 +116,7 @@ if [ "$use_hepllm" = true ]; then
     # suffix="${split}_hepllm-lv2-r7-l5__full-mprun-1"
     suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r7-l5__indv-run-4"
     suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r10-l5__indv-run-3"
-    suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r11-l8__indv-run-1"
+    suffix="${split}_${start_index}_${num_tasks_text}_hepllm-lv2-r11-l8__indv-run-3"
 fi
 
 # experiment suffix
@@ -122,7 +125,7 @@ fi
 # suffix="${split}_${start_index}_${num_tasks}_baseline__testrun_2"
 
 ####################################################################################################
-exp_subdir="hepllm-v0.6"
+exp_subdir="hepllm-v0.7"
 
 ####################################################################################################
 # use gold patch
@@ -213,7 +216,15 @@ if [ "$run_eval" = true ]; then
     config_stem=$(basename $config_file .yaml)
     # cost upto two decimals
     cost=$(printf "%.2f" $per_instance_cost_limit)
-    predictions_path="trajectories/${exp_subdir}/azure-gpt4__${data_stem}__${split}__${config_stem}__t-0.00__p-0.95__c-${cost}__install-1__${suffix}/all_preds.jsonl"
+
+    # if azure in model name e.g. model_name_text = azure-gpt4 else model_name
+    if [[ "$model_name" == *"azure"* ]]; then
+        model_name_text="azure-gpt4"
+    else
+        model_name_text=$model_name
+    fi
+    predictions_path="trajectories/${exp_subdir}/${model_name_text}__${data_stem}__${split}__${config_stem}__t-0.00__p-0.95__c-${cost}__install-1__${suffix}/all_preds.jsonl"
+    
     # predictions_path="trajectories/gold/check-harness.jsonl"
     echo "evaluating predictions_path ... $predictions_path"
     # predictions_path=$1
@@ -230,16 +241,14 @@ if [ "$run_eval" = true ]; then
     testbed_dir="${4:-/testbed}" # place the testbed dir in the root to make the path length smaller
     # If results or testbed directories do not exist, create them
 
-    # create the results dir in the folder corresponding to the predictions all_preds.jsonl file
-    results_dir=$(dirname "$predictions_path")/eval_logs
-    # get absolute path for the results dir
-    results_dir=$(realpath "$results_dir")
-
     # output directory as absolute path
     output_dir=$(dirname "$predictions_path")
     output_dir=$(realpath "$output_dir")
 
+    # create the results dir in the folder corresponding to the predictions all_preds.jsonl file
+    results_dir=$(dirname "$predictions_path")/eval_logs
     if [ ! -d "$results_dir" ]; then
+        echo "Creating results directory at $results_dir"
         mkdir -p "$results_dir"
         echo "Created results directory at $results_dir"
     fi
@@ -247,6 +256,10 @@ if [ "$run_eval" = true ]; then
         mkdir -p "$testbed_dir"
         echo "Created testbed directory at $testbed_dir"
     fi
+    # get absolute path for the results dir
+    results_dir=$(realpath "$results_dir")
+    echo "results_dir: $results_dir"
+
     # Check if the user wants to use Docker or not
     use_docker=false
     ####################################################################################################
@@ -274,7 +287,7 @@ if [ "$run_eval" = true ]; then
             --predictions_path "${predictions_path}" \
             --log_dir "${results_dir}" \
             --swe_bench_tasks "${dataset_name_or_path}" \
-            --num_processes 10 \
+            --num_processes 1 \
             --timeout 900 \
             --skip_existing
 
@@ -283,13 +296,6 @@ if [ "$run_eval" = true ]; then
             --predictions_path ${predictions_path} \
             --log_dir ${results_dir} \
             --output_dir ${output_dir} \
-            --swe_bench_tasks "${dataset_name_or_path}"
-
-        # python evaluation_docker/run_evaluation_v2.py \
-        #     --predictions_path "$predictions_path" \
-        #     --swe_bench_tasks "$dataset_name_or_path" \
-        #     --log_dir "$results_dir" \
-        #     --timeout 900 \
-        #     --skip_existing
+            --swe_bench_tasks ${dataset_name_or_path}
     fi
 fi

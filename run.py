@@ -474,7 +474,7 @@ def _print_patch_message(patch_output_file: Path):
     console.print(rich.markdown.Markdown("\n".join(content)))
 
 
-def get_args(args=None, azure_api_index=None) -> ScriptArguments:
+def get_args(args=None, azure_api_index=2) -> ScriptArguments:
     """Parse command line arguments and return a ScriptArguments object.
     
     Args:

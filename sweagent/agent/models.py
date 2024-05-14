@@ -216,12 +216,18 @@ class OpenAIModel(BaseModel):
             "cost_per_input_token": 1e-05,
             "cost_per_output_token": 3e-05,
         },
+        "gpt-4o": {
+            "max_context": 128_000,
+            "cost_per_input_token": 5e-06,
+            "cost_per_output_token": 1.5e-05,
+        }
     }
 
     SHORTCUTS = {
         "gpt3": "gpt-3.5-turbo-1106",
         "gpt3-legacy": "gpt-3.5-turbo-16k-0613",
         "gpt4": "gpt-4-1106-preview",
+        "gpt4o": "gpt-4o",
         "gpt-4": "gpt-4-1106-preview",
         "gpt-35-turbo": "gpt-3.5-turbo-1106",
         "gpt-3.5-turbo": "gpt-3.5-turbo-1106",
@@ -301,6 +307,7 @@ class OpenAIModel(BaseModel):
                 # add BFS prompt at the end of the last message
                 bfs_prompt = f"LETS TAKE SOME TIME TO THINK FOR THE NEXT ACTION:\nBefore generating an output, consider {bfs_b} significantly different thought generations (no actions needed) for the next step.\n you be a bit detailed \n\n Finally, decide which action (thought) provides the most promising approach to solve the task as quickly and efficiently as possible while still minimizing risk of making mistakes."
                 bfs_prompt = f"LETS TAKE SOME TIME TO THINK FOR THE NEXT ACTION:\nBefore generating an output, consider {bfs_b} significantly different thought generations (no actions needed) for the next step.\n you can be a bit more concise and to the point \n\n Finally, decide which action (thought) provides the most promising approach to solve the task as quickly and efficiently as possible while still minimizing risk of making mistakes. Note the goal is to quickly solve the bug and pass the tests \n IMPORTANT: you have to solve the task on your own, you cannot contact the user or internet for help. you just have access to the repo and tools (as explaned in the task description). Also you dont need to worry about changing documentation currently."
+                bfs_prompt = f"LETS TAKE SOME TIME TO THINK FOR THE NEXT ACTION:\nBefore generating an output, consider {bfs_b} significantly different thought generations (no actions needed) for the next step.\n you can be very concise for each thought and to the point \n\n Finally, decide which action (thought) provides the most promising approach to solve the task as quickly and efficiently (dont worry about non-code related stuff like changing documentation)  \n IMPORTANT: you have to solve the task on your own, you cannot contact the user or internet for help. you just have access to the repo and tools (as explaned in the task description)."
 
                 messages[-1]["content"] += f"\n\n{bfs_prompt}"
 
@@ -310,6 +317,11 @@ class OpenAIModel(BaseModel):
                                                     temperature=self.args.temperature,
                                                     top_p=self.args.top_p,
                                                 )
+                # Calculate + update costs, return response
+                input_tokens = preliminary_response.usage.prompt_tokens
+                output_tokens = preliminary_response.usage.completion_tokens
+                self.update_stats(input_tokens, output_tokens)
+
                 next_action_analysis = preliminary_response.choices[0].message.content
                 logger.info("#############################################")
                 logger.info(next_action_analysis)
